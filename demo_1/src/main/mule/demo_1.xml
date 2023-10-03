@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="d8c38a25-c08a-4603-bdd4-f97cf3bd25e1" basePath="/api" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<flow name="demo_1Flow" doc:id="f827139e-f51f-412d-b4fe-ba3e2d202533" >
+		<http:listener doc:name="Listener" doc:id="d50fc784-6cbd-43a5-9e40-2e366264a799" config-ref="HTTP_Listener_config" path="/demo"/>
+		<logger level="INFO" doc:name="Logger" doc:id="e193671d-7d01-4fc9-827b-307058170591" message='#["Application Running......."]'/>
+		<ee:transform doc:name="Transform Message" doc:id="1766ac9b-9fbf-4e6e-8225-0b572488a73f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status":200,
+	"message":"Success",
+	"content":"Hello World"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="8323a6ad-c655-4b5d-89bd-e9118b1632c4" message='#["Application Stop"]'/>
+	</flow>
+</mule>
