@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="response-json" format="json">
+      <types:shape format="weave" example="schemas/response-json.json"><![CDATA[%dw 2.0
+
+type response_json = {|
+  status: Number {"typeId": "int"}, 
+  message: String
+|} {"example": "{\\\"status\\\":200,\\\"message\\\":\\\"The mule event response successfully !\\\"}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="response-xml" format="xml">
+      <types:example format="xml" element="response" location="examples/response-xml.xml"/>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#e99bba8a-7be0-4379-b4f9-421d8b1cc68c">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="response-json"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#98a8e1e9-a268-4c01-bcb9-4f7e9e6bf365">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="response-xml"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="response-xml"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

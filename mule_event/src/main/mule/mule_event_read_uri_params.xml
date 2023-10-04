@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="mule_event_read_uri_paramsFlow" doc:id="5e4b7969-9c32-4da7-b9c0-633be6d1239b" >
+		<http:listener doc:name="Listener" doc:id="b053be01-0207-45d5-b3a6-9ee77d16abec" config-ref="HTTP_Listener_config" path="/read-uri-params/{id}/{name}/{salary}"/>
+		<logger level="INFO" doc:name="Start" doc:id="8c7fbe33-ac6d-4d67-8b7e-d1f13039d28f" message="Application Running..."/>
+		<logger level="INFO" doc:name="Employee Salary" doc:id="055d8dd5-7818-4255-a2f4-d698d8710863" message="#[attributes.uriParams.salary]"/>
+		<ee:transform doc:name="Transform Message" doc:id="4e5fcfb4-93ec-48c4-b4d0-56599f97e91f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+{
+	"empInfo":{
+		"empId":attributes.uriParams.id,
+		"empName":attributes.uriParams.name,
+		"salary":attributes.uriParams.salary,
+	}
+	
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="24e3f419-49a9-4bda-b182-c58b966cc6c6" message="Application send response successful !"/>
+	</flow>
+</mule>

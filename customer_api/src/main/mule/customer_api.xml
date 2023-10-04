@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="72402fa6-e73d-4db8-9c70-4687284d9eff" basePath="/customer-api" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<flow name="customer_apiFlow" doc:id="bbacec9c-12c4-49e6-b887-1044bb370e84" >
+		<http:listener doc:name="Listener" doc:id="0f49f7ce-04df-4d35-987b-bf4a0713b1cb" config-ref="HTTP_Listener_config" path="/check-out" allowedMethods="POST"/>
+		<logger level="INFO" doc:name="Logger" doc:id="a22532b4-80a1-4e26-ab35-5888869efed0" message="Application Running...."/>
+		<logger level="INFO" doc:name="Payload" doc:id="60b87431-801e-4bfb-b002-824b890a796b" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="ed9e6ec8-7524-444d-9ad6-acef866afa9b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	custId: payload.custId,
+	custName: payload.custFirstName ++ ' ' ++ payload.custLastName,
+	billDetails: {
+		totalBill: payload.itemDetails.item1 + payload.itemDetails.item2 + payload.itemDetails.item3
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="4355d47e-6716-4fab-a8df-fb31ca69f6c1" message="Application send response succesful !"/>
+	</flow>
+</mule>

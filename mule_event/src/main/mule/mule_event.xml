@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="94c75b90-37b1-4974-83bc-74b675203973" basePath="/api" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<flow name="mule_eventFlow" doc:id="e0bf969b-1c0f-42a3-beec-c9ada833c66c" >
+		<http:listener doc:name="Listener" doc:id="5ca0d170-8b1f-496a-be07-aa2e1e6791dc" config-ref="HTTP_Listener_config" path="/read-json"/>
+		<logger level="INFO" doc:name="Start" doc:id="0559ca74-f92a-46e7-9fea-2b8495173112" message="Application Running....."/>
+		<logger level="INFO" doc:name="Log Payload" doc:id="01739f7d-f707-4367-b849-6b8e0364032e" message="The received data is : #[payload]"/>
+		<logger level="INFO" doc:name="Log City" doc:id="3d660cf7-7a54-4d24-8188-8d532eb52d5f" message="The city of the employe is: #[payload.address.city]"/>
+		<ee:transform doc:name="Transform Message" doc:id="e99bba8a-7be0-4379-b4f9-421d8b1cc68c">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	status: 200,
+	message: "mule event response successfully !"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="bd45c7a7-7a94-4bf5-9336-4c8fb2f660a6" message="Application Response success !"/>
+	</flow>
+</mule>

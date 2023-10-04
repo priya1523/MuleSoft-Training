@@ -1,0 +1,83 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="check-out-response" format="json">
+      <types:shape format="weave" example="check-out-response.json"><![CDATA[%dw 2.0
+
+type check_out_response = {|
+  custId: Number {"typeId": "int"}, 
+  custName: String, 
+  billDetails: {| totalBill: Number {"typeId": "int"} |}
+|} {"example": "{\\\"custId\\\":1,\\\"custName\\\":\\\"John Smith\\\",\\\"billDetails\\\":{\\\"totalBill\\\":3500}}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="check-out-request" format="json">
+      <types:shape format="weave" example="examples/check-out-request.json"><![CDATA[%dw 2.0
+
+type check_out_request = {|
+  custId: Number {"typeId": "int"}, 
+  custFirstName: String, 
+  custLastName: String, 
+  itemDetails: {|
+    item1: Number {"typeId": "int"}, 
+    item2: Number {"typeId": "int"}, 
+    item3: Number {"typeId": "int"}
+  |}
+|} {"example": "{\\\"custId\\\":1,\\\"custFirstName\\\":\\\"John\\\",\\\"custLastName\\\":\\\"Smith\\\",\\\"itemDetails\\\":{\\\"item1\\\":2000,\\\"item2\\\":3500,\\\"item3\\\":1900}}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="excercise-request" format="json">
+      <types:shape format="weave" example="examples/excercise-request.json"><![CDATA[%dw 2.0
+
+type excercise_request = {|
+  custId: Number {"typeId": "int"}, 
+  custFirstName: String, 
+  custLastName: String, 
+  itemInfo: Array<{|    itemName: String,     itemValue: Number {"typeId": "int"}  |}>
+|} {"example": "{\\\"custId\\\":1,\\\"custFirstName\\\":\\\"John\\\",\\\"custLastName\\\":\\\"Smith\\\",\\\"itemInfo\\\":[{\\\"itemName\\\":\\\"Mobile\\\",\\\"itemValue\\\":34567},{\\\"itemName\\\":\\\"Mouse\\\",\\\"itemValue\\\":3456},{\\\"itemName\\\":\\\"Headset\\\",\\\"itemValue\\\":3456}]}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="excercise-response" format="json">
+      <types:shape format="weave" example="examples/excercise-response.json"><![CDATA[%dw 2.0
+
+type excercise_response = {|
+  custId: Number {"typeId": "int"}, 
+  custName: String, 
+  billDetails: {| totalBill: Number {"typeId": "int"} |}
+|} {"example": "{\\\"custId\\\":1,\\\"custName\\\":\\\"John Smith\\\",\\\"billDetails\\\":{\\\"totalBill\\\":3500}}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#ed9e6ec8-7524-444d-9ad6-acef866afa9b">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="check-out-request"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="check-out-response"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#e38db112-1e45-4df0-9da9-2f59aa33f4b3">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="excercise-request"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="excercise-response"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

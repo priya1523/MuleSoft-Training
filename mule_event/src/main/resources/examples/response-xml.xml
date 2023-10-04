@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<response>
+	<empId>E123</empId>
+	<status>200</status>
+	<message>The response send successfully !</message>
+</response>

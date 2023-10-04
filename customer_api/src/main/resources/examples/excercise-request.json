@@ -1,0 +1,19 @@
+{
+  "custId":1,
+  "custFirstName": "John",
+  "custLastName": "Smith",
+	"itemInfo":[
+		{
+		"itemName":"Mobile",
+		"itemValue":34567
+		},
+		{
+		"itemName":"Mouse",
+		"itemValue":3456
+		},
+		{
+		"itemName":"Headset",
+		"itemValue":3456
+		}
+	]
+}

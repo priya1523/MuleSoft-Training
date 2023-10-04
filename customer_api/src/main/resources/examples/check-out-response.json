@@ -1,0 +1,7 @@
+{
+    "custId":1,
+  "custName": "John Smith",
+   "billDetails": {
+    "totalBill": 3500
+  }
+}

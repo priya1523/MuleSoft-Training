@@ -1,0 +1,10 @@
+{
+	  "custId":1,
+	  "custFirstName": "John",
+	  "custLastName": "Smith",
+	  "itemDetails": {
+		"item1": 2000,
+		"item2": 3500,
+		"item3": 1900
+	  }
+}

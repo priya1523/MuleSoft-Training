@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="mule_event_xmlFlow" doc:id="6007cafa-7133-4bf7-b461-b835fbed5583" >
+		<http:listener doc:name="Listener" doc:id="12e983d3-ac35-4572-be2c-3a01bac013a0" config-ref="HTTP_Listener_config" path="/read-xml"/>
+		<logger level="INFO" doc:name="Start" doc:id="c1a8e5b6-ff13-4d84-b395-8fd1eb2de5a8" message="Application Running...."/>
+		<logger level="INFO" doc:name="Log Payload" doc:id="32d1e4d6-5cc5-4393-9d7e-e23c3f60a0f5" message="The data getting in payload is : #[payload]"/>
+		<logger level="INFO" doc:name="Log State" doc:id="62622bc4-e74b-4d93-bac1-ba63b983d5d5" message="The state of the employee is : #[payload.employee.address.state]" />
+		<ee:transform doc:name="Transform Message" doc:id="98a8e1e9-a268-4c01-bcb9-4f7e9e6bf365">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+---
+{
+	response: {
+		empId: payload.employee.empId,
+		status: 200,
+		message: "The response send successfully"
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="01617eba-85e0-4ccc-b713-187b3fbca522" message="Application response successful !"/>
+	</flow>
+</mule>

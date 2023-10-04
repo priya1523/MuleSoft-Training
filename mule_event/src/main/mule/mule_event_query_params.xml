@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="mule_event_query_paramsFlow" doc:id="d4b6f137-d03c-412c-8b99-36368862bba5" >
+		<http:listener doc:name="Listener" doc:id="6f50efd0-c001-403f-93c3-fb9af582c986" config-ref="HTTP_Listener_config" path="/read-query-params"/>
+		<logger level="INFO" doc:name="Start" doc:id="d0e317be-0c95-46ac-b7be-f0aebc35951a" message="Application Running...."/>
+		<logger level="INFO" doc:name="Log Employee Name" doc:id="e161caba-bf8e-478f-98a0-71ea6b93235e" message="#[attributes.queryParams.name]"/>
+		<ee:transform doc:name="Transform Message" doc:id="c4eb04c6-7b98-4f32-bc93-69eafa258c70" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"empId":attributes.queryParams.id,
+	"empName":attributes.queryParams.name,
+	"salary":attributes.queryParams.salary
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="c6cc8d59-6cd4-4562-a882-fca6ae792fe0" message="Application send response successful !"/>
+	</flow>
+</mule>
