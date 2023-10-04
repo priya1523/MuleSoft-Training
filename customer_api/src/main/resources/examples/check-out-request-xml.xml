@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<customerRequest>
+	<custId>1</custId>
+	<custFirstName>John</custFirstName>
+	<custLastName>Smith</custLastName>
+	<itemDetails>
+		<item1>3000</item1>
+		<item2>5000</item2>
+		<item3>8000</item3>
+	</itemDetails>
+</customerRequest>

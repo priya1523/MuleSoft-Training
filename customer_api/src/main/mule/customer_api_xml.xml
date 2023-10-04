@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="customer_api_xmlFlow" doc:id="7f16b02f-2ac9-40f9-8e52-ba80ae51207d" >
+		<http:listener doc:name="Listener" doc:id="1d40d0a7-44f7-44a0-aebb-5e89cdaa402b" config-ref="HTTP_Listener_config" path="/check-out-xml" allowedMethods="POST"/>
+		<logger level="INFO" doc:name="Start" doc:id="30d4fe47-fda0-4cc8-9c17-6bd3cf03a7bb" message="Application Running...."/>
+		<logger level="INFO" doc:name="Payload" doc:id="43b88e64-2120-4e91-a81c-7c85dad3112d" message="#[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="85505d6b-ed17-4ed0-8a3d-b75c6882a796" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+{
+	customerResponse: {
+		custId: payload.customerRequest.custId,
+		custName: payload.customerRequest.custFirstName ++ ' ' ++ payload.customerRequest.custLastName,
+		billDetails: {
+			totalBill: 
+			payload.customerRequest.itemDetails.item1 +
+			payload.customerRequest.itemDetails.item2 +
+			payload.customerRequest.itemDetails.item3
+		}
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="6a29b446-751c-4ab5-b942-0e2a65b80ee9" message="Application send response successful !"/>
+	</flow>
+</mule>

@@ -51,6 +51,12 @@ type excercise_response = {|
 
 ]]></types:shape>
     </types:type>
+    <types:type name="check-out-request-xml" format="xml">
+      <types:example format="xml" element="customerRequest" location="examples/check-out-request-xml.xml"/>
+    </types:type>
+    <types:type name="check-out-response-xml" format="xml">
+      <types:example format="xml" element="customerResponse" location="examples/check-out-response-xml.xml"/>
+    </types:type>
   </types:catalog>
   <types:enrichment select="#ed9e6ec8-7524-444d-9ad6-acef866afa9b">
     <types:processor-declaration>
@@ -76,6 +82,20 @@ type excercise_response = {|
       <types:output-event>
         <types:message>
           <types:payload type="excercise-response"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#85505d6b-ed17-4ed0-8a3d-b75c6882a796">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="check-out-request-xml"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="check-out-response-xml"/>
         </types:message>
       </types:output-event>
     </types:processor-declaration>
