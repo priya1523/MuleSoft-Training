@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_95b8e13d_c359_4992_b4cf_55600f800caf_Output_Variables_age = Number {"typeId": "int"}
+

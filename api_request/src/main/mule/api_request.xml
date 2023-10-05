@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="c9ba4d32-7e31-4e34-a54d-299822cc4914" basePath="/api" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="b99cabcc-a1a4-4db0-895b-8da7c489dab7" basePath="/api/v1" >
+		<http:request-connection protocol="HTTPS" host="dummy.restapiexample.com" port="443" />
+	</http:request-config>
+	<flow name="api_requestFlow" doc:id="dec3ba10-65f8-4eea-8aa7-603c4c3eee90" >
+		<http:listener doc:name="Listener" doc:id="bbc053a1-1941-4952-9526-0612e08e3698" config-ref="HTTP_Listener_config" path="/request" allowedMethods="GET"/>
+		<logger level="INFO" doc:name="Start" doc:id="cd4747c0-c9a4-46eb-99e4-9acd1a192395" message="Application Running...."/>
+		<flow-ref doc:name="Flow Reference" doc:id="d370021f-643c-4ac6-92fd-97bb436a6d31" name="api_requestSub_Flow" />
+		<ee:transform doc:name="Transform Message" doc:id="215d1f34-78fd-4ce8-8443-838a35e2cdc3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.data]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="f7d27695-ebd6-45ec-af76-081d3f1aed57" message="Application response succesfully !"/>
+	</flow>
+	<sub-flow name="api_requestSub_Flow" doc:id="441648af-d845-4844-9ef4-06ab78188d52" >
+		<logger level="INFO" doc:name="Start" doc:id="60cd57c0-1fd2-4785-975e-bf79deab5086" message="Sub flow started"/>
+		<http:request method="GET" doc:name="Request" doc:id="d5f12c46-d356-4f62-a81f-931d3f8cf50a" config-ref="HTTP_Request_configuration" path="/employees"/>
+		<logger level="INFO" doc:name="End" doc:id="a5c2dd9f-9822-4fb3-91e6-4eeb5dd37d33" message="Sub flow end"/>
+	</sub-flow>
+</mule>

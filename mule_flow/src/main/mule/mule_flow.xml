@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="e8315583-ab91-42bf-a63e-89f7693bcbbe" basePath="/mule-flow" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<flow name="mule_flowFlow" doc:id="dc761856-77e4-4e4e-8e93-2d75b25e07c2" >
+		<http:listener doc:name="Listener" doc:id="20aa1471-3007-43da-ae5f-d8b21d8e9c64" config-ref="HTTP_Listener_config" path="/sub-flow" allowedMethods="GET"/>
+		<logger level="INFO" doc:name="Start" doc:id="08b87dd4-102d-41dc-b9d0-3c93e9191b93" message="Application Running..."/>
+		<flow-ref doc:name="Flow Reference" doc:id="bf214347-c32d-48f9-adc1-f59cd9450260" name="mule_flowSub_Flow"/>
+		<logger level="INFO" doc:name="End" doc:id="e73a1b3c-e153-4c6f-a1eb-832bbde1d35b" message="Application Response Success !"/>
+	</flow>
+	<sub-flow name="mule_flowSub_Flow" doc:id="6dd6ef06-dc25-4323-bef4-91488fc80d56" >
+		<logger level="INFO" doc:name="Sub-Flow Start" doc:id="59e0d44e-274c-427f-ae90-17bb52de42d3" message="Entered in the Sub-flow" />
+		<set-payload value='#["The payload from the sub-flow"]' doc:name="sub-flow payload" doc:id="e858ff38-c26e-485c-bf4f-bbdd24e8f183" />
+		<logger level="INFO" doc:name="Sub-FLow End" doc:id="ed5d0d19-5b27-40aa-8018-53702cdaba60" message="Sub-Flow End Here and return to main flow" />
+	</sub-flow>
+</mule>

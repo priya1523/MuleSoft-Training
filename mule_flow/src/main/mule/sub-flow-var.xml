@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="sub-flow-varFlow" doc:id="7a0108c9-7366-4d34-bce5-8d7e570d1651" >
+		<http:listener doc:name="Listener" doc:id="cd0d781d-2680-4454-a30d-2555a0c87228" config-ref="HTTP_Listener_config" path="/sub-flow-var" allowedMethods="POST"/>
+		<logger level="INFO" doc:name="Start" doc:id="21178f6b-31a1-423e-b211-d6620003840b" message="Application Running..."/>
+		<set-variable value="#[payload.name]" doc:name="main flow variable" doc:id="688cdf70-f8ae-4bcc-8b47-c254a2d087b4" variableName="name"/>
+		<logger level="INFO" doc:name="Name-Log" doc:id="1f908f5c-7c8f-47c1-88f1-8a18beff944d" message="The name from the main flow variable is: #[vars.name]"/>
+		<flow-ref doc:name="Flow Reference" doc:id="e33b8784-3f2c-4e09-9852-3d0be35c7923" name="sub-flow-varSub_Flow"/>
+		<logger level="INFO" doc:name="Age-Log" doc:id="1fbb41f1-6756-4246-a696-bd5bc55a22fc" message="The age from the sub flow in main flow variable is : #[vars.age]"/>
+		<ee:transform doc:name="Transform Message" doc:id="4ae5b69b-3ab7-4364-8f14-d689ed4e51c6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	name: vars.name,
+	age: vars.age
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="a641a4f7-473c-46f8-9607-3a6ce6f01e29" message="Application send the response succesfully !"/>
+	</flow>
+	<sub-flow name="sub-flow-varSub_Flow" doc:id="95b8e13d-c359-4992-b4cf-55600f800caf" >
+		<logger level="INFO" doc:name="Sub-Flow-Start" doc:id="5c32db38-03ee-4502-98a2-3f9d40097cb0" message="Enter in the Sub-Flow"/>
+		<logger level="INFO" doc:name="Name-Log" doc:id="4602b119-cc0b-4728-a61e-c64847524795" message="The name from the main flow variable is : #[vars.name]"/>
+		<set-variable value="#[payload.age]" doc:name="sub flow variable" doc:id="e58ee02a-5fac-4a63-8ade-065aa28d6d24" variableName="age"/>
+		<logger level="INFO" doc:name="Age-Log" doc:id="8f9cad0b-2a46-4b4c-a00c-0bfc3737ea6e" message="The age from the sub flow is : #[vars.age]"/>
+		<logger level="INFO" doc:name="Sub-Flow-End" doc:id="ed988c1b-5053-4228-9994-7d40d23658b8" message="Sub flow ended and return to main flow"/>
+	</sub-flow>
+</mule>
