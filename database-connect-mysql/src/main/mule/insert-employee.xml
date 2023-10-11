@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="f88f67e5-d435-48cd-9ed1-f1fe3c6858a5" basePath="/employee-api" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="b1b4310c-813e-4fdd-9242-c515905ed9f2" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="root" database="employee_db" />
+	</db:config>
+	<flow name="insert-employeeFlow" doc:id="e5c38826-42e5-4a79-b567-c927827eb02e" >
+		<http:listener doc:name="Listener" doc:id="58313e49-64a0-440e-83f8-9d9c6797b781" config-ref="HTTP_Listener_config" path="/insert-empdata" allowedMethods="POST"/>
+		<logger level="INFO" doc:name="Start" doc:id="e0392103-46ed-4ceb-bac3-e76ecd1ad590" message="Application Running..."/>
+		<db:insert doc:name="Insert" doc:id="fe041e24-1b24-4b2d-8bba-203fcd357f22" config-ref="Database_Config">
+			<db:sql ><![CDATA[insert into employee_db.employee_details values (:empId,:empName,:EmpDesignation,:empSalary,:empAge,:insert_time); ]]></db:sql>
+			<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	EmpDesignation: payload.designation,
+	empId: payload.emp_id as String,
+	empName: payload.emp_name,
+	empSalary: payload.salary as String,
+	insert_time: now() as String {format: "yyyy-MM-dd"},
+	empAge: payload.age as String
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="470fa15d-934f-41da-8ff0-f927d6ea4b47" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status":"success",
+	"message":"inserted the employee information into DB"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="c763f70e-d1ea-443f-88a1-3947b9ac2e2d" message="Application send response succes !!"/>
+	</flow>
+</mule>

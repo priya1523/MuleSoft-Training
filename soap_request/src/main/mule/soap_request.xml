@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="9b28b163-6098-431b-b3cd-d391fda06f14" basePath="/soap" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<flow name="soap_requestFlow" doc:id="f895de7a-221a-4aa2-9a24-cb7376bf316d" >
+		<http:listener doc:name="Listener" doc:id="0a56f3c5-9ee2-47fb-b213-f3fce63553d9" config-ref="HTTP_Listener_config" path="/request" allowedMethods="POST"/>
+		<logger level="INFO" doc:name="Start" doc:id="97ff047e-ccd4-4375-b487-16ef5e7826b4" message="Application Running...."/>
+		<flow-ref doc:name="Flow Reference" doc:id="5e48ace8-5d5c-4085-8dcb-a326acb7ba51" name="soap_requestSub_Flow"/>
+		<ee:transform doc:name="Transform Message" doc:id="2d22d621-8dc0-47e6-80df-191901dd5534" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="44792961-0988-49f3-ae68-37bdaddeaeb5" message="Application response success !"/>
+	</flow>
+	<sub-flow name="soap_requestSub_Flow" doc:id="cda96153-53c5-417b-bf1f-8c9dc4e29ab9" >
+		<logger level="INFO" doc:name="Start" doc:id="7587eebb-6d79-4b47-989b-1c6e40457f5c" message="Sub-Flow start"/>
+		<logger level="INFO" doc:name="End" doc:id="5c8915ab-f349-4ac8-9ca3-1c8710e9ee72" message="Sub-Flow end"/>
+	</sub-flow>
+</mule>

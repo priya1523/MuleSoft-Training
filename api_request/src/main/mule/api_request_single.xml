@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="api_request_singleFlow" doc:id="2e07bfbf-b62b-4f4e-8ff0-17880a0463db" >
+		<http:listener doc:name="Listener" doc:id="8e5c2d20-6774-416a-85d9-c9829493fb75" config-ref="HTTP_Listener_config" path="/request/single" allowedMethods="POST"/>
+		<logger level="INFO" doc:name="Start" doc:id="1a51425e-e080-4219-b54b-23f1809b62c1" message="Application Running..."/>
+		<flow-ref doc:name="Flow Reference" doc:id="81538c78-40e5-4b0f-b977-1b666e45eedc" name="api_request_singleSub_Flow"/>
+		<ee:transform doc:name="Transform Message" doc:id="862e408f-9e11-4f69-bb29-1b0d6a8e9e98" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="3fe67954-9a11-464d-ad67-cfe1a1112b17" message="Application send reponse success !"/>
+	</flow>
+	<sub-flow name="api_request_singleSub_Flow" doc:id="71bca5e4-b5fb-460f-beae-35e6b0879df9" >
+		<logger level="INFO" doc:name="Start" doc:id="263f06f1-20bc-4795-b92c-19ec9499badc" message="Sub-Flow started"/>
+		<http:request method="GET" doc:name="Request" doc:id="a1eed559-1a4e-41a7-9214-e43aafed4bf6" config-ref="HTTP_Request_configuration" path="/employee/{empId}" sendCorrelationId="NEVER">
+			<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	empId : payload.empId
+}]]]></http:uri-params>
+		</http:request>
+		<logger level="INFO" doc:name="End" doc:id="5dbcdf6a-8f0f-45e8-b1a1-1e01bce8be2d" message="Sub-Flow end"/>
+	</sub-flow>
+</mule>

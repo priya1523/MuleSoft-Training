@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="get-employeeFlow" doc:id="1cda6f5f-94de-472f-90f4-4bc2a4904cf2" >
+		<http:listener doc:name="Listener" doc:id="1a597da5-75c2-4300-9cb6-f1260ae6984a" config-ref="HTTP_Listener_config" path="/fetch-emp-info" allowedMethods="GET"/>
+		<logger level="INFO" doc:name="Start" doc:id="4faae936-1ff9-4127-9984-602c6e14ec5c" message="Application Running..."/>
+		<choice doc:name="Choice" doc:id="cf615e30-f46a-4f1b-9af9-0c68ff15b063" >
+			<when expression="#[attributes.queryParams.empid != null]">
+				<flow-ref doc:name="Flow Reference" doc:id="af3c833f-955e-4d27-89c6-145752259e7c" name="get-employee-sub_flow"/>
+			</when>
+			<when expression="#[attributes.queryParams.empid == null]">
+				<flow-ref doc:name="Flow Reference" doc:id="999d4b98-a0b6-45d9-9ad4-d0a1fded3b65" name="get-employees-sub-flow"/>
+			</when>
+			<otherwise >
+				<set-payload value='"Payload is not valid...!"' doc:name="Set Payload" doc:id="29f999e5-e9a0-44fd-91b1-ebe43f04a2e0" />
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End" doc:id="99d60a1f-595d-4450-9861-4eb3784f8647" message="Application Send response success !!"/>
+	</flow>
+	<sub-flow name="get-employee-sub_flow" doc:id="9ded86f0-c311-4df6-83f2-cb2186a4b4d5" >
+		<logger level="INFO" doc:name="Start" doc:id="392d5876-db12-46c4-897d-42e89a29450b" message="Enter in the sub flow : single employee"/>
+		<db:select doc:name="Select" doc:id="995a2ad8-3a28-457f-81c0-709bdc24c7bc" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from employee_db.employee_details where empid=:empId;]]></db:sql>
+			<db:input-parameters ><![CDATA[#[empId:attributes.queryParams.empid]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="ea79791a-b0a1-47c6-8a19-65f2edaeb16e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	emp_id: payload[0].empid,
+	emp_name: payload[0].empname default "",
+	emp_designation: payload[0].designation default "",
+	emp_salary: payload[0].salary default 0,
+	emp_age: payload[0].age default 0
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="43460332-2e9c-4972-ad75-2dd6eaea896f" message="End in the sub flow : single employee"/>
+	</sub-flow>
+	<sub-flow name="get-employees-sub-flow" doc:id="33b6f04c-5902-483d-81d1-c1007e8b9466" >
+		<logger level="INFO" doc:name="Start" doc:id="1600dd91-01e0-46d7-a84e-4ae3f9335179" message="Enter in the sub flow : all employee"/>
+		<db:select doc:name="Select" doc:id="050df448-f911-4cb1-a744-9056adf48841" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from employee_db.employee_details;]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="1a0b845c-2a6f-4cb5-89dc-8a7da190ccab" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	status: "success",
+	empInfo: payload map ( payload01 , indexOfPayload01 ) -> 
+	{
+		emp_id: payload01.empid,
+		emp_name: payload01.empname default "",
+		designation: payload01.designation default "",
+		salary: payload01.salary default 0,
+		age: payload01.age default 0
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="659414a2-440b-46fa-ad5d-2341c195273c" message="Enter in the sub flow : all employee"/>
+	</sub-flow>
+</mule>

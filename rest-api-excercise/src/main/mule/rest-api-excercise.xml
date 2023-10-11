@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="30e14d50-706c-454d-839e-54786452b96f" basePath="/consume-rest-api" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="c4f38cf3-8d90-43f6-a128-f7d49fd0f152" basePath="/api" >
+		<http:request-connection protocol="HTTPS" host="reqres.in" />
+	</http:request-config>
+	<flow name="rest-api-excerciseFlow" doc:id="ceeefbd2-52ea-4976-8692-f136485eb0e9" >
+		<http:listener doc:name="Listener" doc:id="2c8673ad-c917-4425-a631-a39d78a9ca7c" config-ref="HTTP_Listener_config" path="/get-user-info"/>
+		<logger level="INFO" doc:name="Start" doc:id="cb57f0f2-218e-4f68-9190-810aa1d3c44d" message="Application Runnig......"/>
+		<http:request method="GET" doc:name="Request" doc:id="5aaddc1a-1168-4073-84cf-b604c5e64c0c" config-ref="HTTP_Request_configuration" path="/users"/>
+		<ee:transform doc:name="Transform Message" doc:id="92175739-ccef-4dba-9826-c1ef07618356" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="24efe1a1-505d-4f64-9466-54e7bfc42dea" message="Application send response successful !!"/>
+	</flow>
+</mule>

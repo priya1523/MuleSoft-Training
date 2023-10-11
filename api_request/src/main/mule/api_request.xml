@@ -14,13 +14,13 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 	<flow name="api_requestFlow" doc:id="dec3ba10-65f8-4eea-8aa7-603c4c3eee90" >
 		<http:listener doc:name="Listener" doc:id="bbc053a1-1941-4952-9526-0612e08e3698" config-ref="HTTP_Listener_config" path="/request" allowedMethods="GET"/>
 		<logger level="INFO" doc:name="Start" doc:id="cd4747c0-c9a4-46eb-99e4-9acd1a192395" message="Application Running...."/>
-		<flow-ref doc:name="Flow Reference" doc:id="d370021f-643c-4ac6-92fd-97bb436a6d31" name="api_requestSub_Flow" />
+			<flow-ref doc:name="Flow Reference" doc:id="d370021f-643c-4ac6-92fd-97bb436a6d31" name="api_requestSub_Flow" />
 		<ee:transform doc:name="Transform Message" doc:id="215d1f34-78fd-4ce8-8443-838a35e2cdc3" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
 ---
-payload.data]]></ee:set-payload>
+payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 		<logger level="INFO" doc:name="End" doc:id="f7d27695-ebd6-45ec-af76-081d3f1aed57" message="Application response succesfully !"/>

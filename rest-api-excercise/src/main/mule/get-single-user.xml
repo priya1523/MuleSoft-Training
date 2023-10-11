@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="get-single-userFlow" doc:id="e524dfa0-4113-48fc-96f8-05ed7e80de9c" >
+		<http:listener doc:name="Listener" doc:id="2cc2d200-7a55-4d35-b489-105ef87ab3d2" config-ref="HTTP_Listener_config" path="/get-reqd-user-info"/>
+		<logger level="INFO" doc:name="Start" doc:id="cb8d0d0f-d576-4ac2-8327-8611512725dc" message="Application Running....."/>
+		<set-variable value="payload.userId" doc:name="Set Variable" doc:id="8ad77ece-f5b3-41fa-b450-8fd10937d7f6" variableName="userId"/>
+		<http:request method="GET" doc:name="Request" doc:id="0b048b5c-0097-4253-a808-27aa18bc017d" config-ref="HTTP_Request_configuration" path="/users/{userId}">
+			<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	userId : vars.userId
+}]]]></http:uri-params>
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="23d33788-f71b-44f7-abf7-593a80ae1546" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="66f6dd7c-c7af-46a8-86eb-e9ad8fd110c3" message="Application send response success !!"/>
+	</flow>
+</mule>

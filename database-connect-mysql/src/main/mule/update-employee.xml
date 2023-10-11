@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="update-employeeFlow" doc:id="134e7a7d-37f5-4ade-9cff-67ba56b7e2e8" >
+		<http:listener doc:name="Listener" doc:id="b67741eb-2c42-41ad-b73a-1d5a0d1f0a22" config-ref="HTTP_Listener_config" path="/update-empsal" allowedMethods="PUT"/>
+		<logger level="INFO" doc:name="Start" doc:id="bfb7de05-c687-41f5-a7bf-8ccb12d3b6dc" message="Application Running...."/>
+		<set-variable value="#[output application/java&#10;---&#10;payload.emp_info.emp_id as String]" doc:name="EmpId" doc:id="bcd9d2de-644f-4f16-8011-df9c4f835cde" variableName="empId"/>
+		<db:update doc:name="Update" doc:id="378e99b5-eadc-43ca-a7f8-867d61b1d1b4" config-ref="Database_Config">
+			<db:sql ><![CDATA[update employee_db.employee_details set salary=:empSalary where empid=:empId;]]></db:sql>
+			<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+	empId: payload.emp_info.emp_id as String,
+	empSalary: payload.emp_info.emp_salary as String
+}]]]></db:input-parameters>
+		</db:update>
+		<ee:transform doc:name="Transform Message" doc:id="0e5a4151-ee22-4770-bf56-0a7c0720cde7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+{
+	"Response":{
+		"employeeId":vars.empId,
+		"status":200,
+		"message":"Employee Salary is updated successfully"
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="a60455bf-bf7b-4b23-82cb-c27013ca35f5" message="Application send response success !!"/>
+	</flow>
+</mule>

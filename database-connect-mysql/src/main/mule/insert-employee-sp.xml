@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="insert-employee-spFlow" doc:id="0ca66ef6-4ae4-4875-88c0-7165561bf81d" >
+		<http:listener doc:name="Listener" doc:id="1b5fd418-1fa9-4ae5-aa00-b0c22226e454" config-ref="HTTP_Listener_config" path="/insert-using-sp" allowedMethods="POST"/>
+		<logger level="INFO" doc:name="Start" doc:id="25dbe0e8-04c7-4847-9efd-bb6d4a2c7459" message="Application Running...."/>
+		<db:stored-procedure doc:name="Stored procedure" doc:id="fde11b0c-c362-4a0e-95d7-f48cfe84d726" config-ref="Database_Config">
+			<db:sql ><![CDATA[{call emp_storedprocedure(:eid,:ename,:designation,:sal,:age,:insertDate)}]]></db:sql>
+			<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	eid: payload.emp_id as String,
+	ename: payload.emp_name,
+	insertDate: now() as String {format: "yyyy-MM-dd"},
+	designation: payload.designation,
+	age: payload.age as String,
+	sal: payload.salary as String
+}]]]></db:input-parameters>
+		</db:stored-procedure>
+		<ee:transform doc:name="Transform Message" doc:id="66beed7b-c47e-4f33-a460-c36b923b6a3e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"Employee data is inserted into DB successfully"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="bc1eb13f-d3ca-49b2-ad8d-830901d5e41f" message="Application send response success !!"/>
+	</flow>
+</mule>
