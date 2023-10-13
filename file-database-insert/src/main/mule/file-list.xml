@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="file-listFlow" doc:id="1d7ef727-8046-456a-8c24-d28cca0a4ad2" >
+		<http:listener doc:name="Listener" doc:id="a14a541a-25fd-4af4-b158-19eaa96cac15" config-ref="HTTP_Listener_config" path="/file-list" allowedMethods="POST"/>
+		<logger level="INFO" doc:name="Start" doc:id="d321191f-79e7-4372-a424-999e9d7e4f35" message="Application Running......."/>
+		<set-variable value="#[attributes.queryParams.file_name]" doc:name="file name" doc:id="3fe89b4f-aa6e-42bd-953c-2f237bd770f0" variableName="file_name"/>
+		<file:list doc:name="List" doc:id="38c73954-9b06-46ba-941f-60783816b7b4" config-ref="File_Config" directoryPath="C:\Users\priyakumari.a\Desktop\Files\Inbound"/>
+		<ee:transform doc:name="Transform Message" doc:id="e718cf05-983d-4221-86a4-5899b03b47df" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	file_name: payload01.attributes.fileName,
+	size: payload01.attributes.size,
+	path: payload01.attributes.path,
+	modify_date: payload01.attributes.lastModifiedTime as String
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="a8a8735e-930e-404c-bb13-9f7f4e4052fe" >
+			<when expression="#[payload.file_name contains  (vars.file_name)]">
+				<ee:transform doc:name="Transform Message" doc:id="8f34f000-5cbe-4292-87d4-513b7b6be772" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output text/plain
+---
+"The file is exit and consume" ]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="844b5b38-70be-45c8-89bd-6fe4759d2f70" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output text/plain
+---
+"The file is not exist"]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End" doc:id="ad2de6a4-f0f7-4d77-b23e-b6a62f1b2b80" message="The application send response success !!"/>
+	</flow>
+</mule>

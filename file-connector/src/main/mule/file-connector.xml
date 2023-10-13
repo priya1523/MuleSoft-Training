@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="9a5f7d2f-fe6d-488a-9c50-1c9f2c452b96" >
+		<file:connection workingDir="C:\Users\priyakumari.a\Desktop\Files" />
+	</file:config>
+	<flow name="file-connectorFlow" doc:id="1ae4e114-d533-4620-958c-aa50d341a427" >
+		<file:listener doc:name="On New or Updated File" doc:id="378d9dc5-dafb-4713-9050-5db822f19f28" config-ref="File_Config" directory="C:\Users\priyakumari.a\Desktop\Files\Inbound">
+			<scheduling-strategy >
+				<fixed-frequency frequency="30" timeUnit="SECONDS" />
+			</scheduling-strategy>
+		</file:listener>
+		<logger level="INFO" doc:name="File" doc:id="0ad4fc9f-bbd3-465f-a68a-74601778d9b9" message="The content of file : #[payload]"/>
+	</flow>
+</mule>

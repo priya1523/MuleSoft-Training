@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="file-writeFlow" doc:id="eaa59b70-0f00-418b-aa74-13b00ab3b48a" >
+		<http:listener doc:name="Listener" doc:id="7cdfde94-1bdc-4861-930f-3e3e1794b38b" config-ref="HTTP_Listener_config" path="/write-file" allowedMethods="POST"/>
+		<logger level="INFO" doc:name="Start" doc:id="47045d52-2cb4-439e-8299-e8bc5844f0bc" message="Application Running...."/>
+		<ee:transform doc:name="Transform Message" doc:id="53ace18f-72e0-44cd-bd4f-1a82e6505205" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+---
+payload.customers.*customer map ( customer , indexOfCustomer ) -> {
+	first_name: customer.first_name default "",
+	last_name: customer.last_name default "",
+	email: customer.email default "",
+	phone: customer.phone default "",
+	address: customer.address default "",
+	gender: customer.gender default "",
+	age: customer.age default "",
+	registered: customer.registered default "",
+	orders: customer.orders default "",
+	spent: customer.spent default "",
+	job: customer.job default "",
+	hobbies: customer.hobbies default "",
+	is_married: customer.is_married default ""
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<file:write doc:name="Write" doc:id="1dfdd8ee-f1e6-438e-8797-a0bcae0b8b54" config-ref="File_Config" path="C:\Users\priyakumari.a\Desktop\Files\Outbound\customer.csv" mode="CREATE_NEW"/>
+		<ee:transform doc:name="Transform Message" doc:id="0d4b0b59-644a-4ef8-aa13-ca802c221bed" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output text/plain
+---
+"The file writen successful !!"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="6ba090f2-e632-4383-a878-7ecdfa475a24" message="Application send request success !"/>
+	</flow>
+</mule>

@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="csv-insert" format="csv">
+      <types:shape format="weave" example="examples/employees.csv"><![CDATA[%dw 2.0
+
+type csv_insert = Array<{|  first_name: String,   last_name: String,   email: String,   phone_no: String,   gender: String,   age: String,   job_title: String,   years_of_experience: String,   salary: String,   department: String|}> {"isQuotedString": "false",
+"header": "true",
+"headerLineNumber": "0"}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+      </types:properties>
+    </types:type>
+    <types:type name="file-list" format="json">
+      <types:shape format="weave" example="file-list-example.json"><![CDATA[%dw 2.0
+
+type file_list = Array<{|  file_name: String,   size: Number {"typeId": "int"},   path: String,   modify_date: String|}> {"example": "[{\\\"file_name\\\":\\\"a1\\\",\\\"size\\\":20,\\\"path\\\":\\\"c:\\/hjkhdf\\\",\\\"modify_date\\\":\\\"20-12-2023\\\"},{\\\"file_name\\\":\\\"a1\\\",\\\"size\\\":20,\\\"path\\\":\\\"c:\\/hjkhdf\\\",\\\"modify_date\\\":\\\"20-12-2023\\\"}]"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="write-xml" format="xml">
+      <types:example format="xml" element="customers" location="examples/customers.xml"/>
+    </types:type>
+    <types:type name="write-csv" format="csv">
+      <types:shape format="weave"><![CDATA[%dw 2.0
+
+type write_csv = Array<{|  first_name: String,   last_name: String,   email: String,   phone: String,   address: String,   gender: String,   age: String,   registered: String,   orders: String,   spent: String,   job: String,   hobbies: String,   is_married: String|}> {"isQuotedString": "false",
+"header": "true",
+"headerLineNumber": "0"}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+      </types:properties>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#99bfbab0-99f7-449f-83b2-804754cf63dc">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="csv-insert"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#e718cf05-983d-4221-86a4-5899b03b47df">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="file-list"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#53ace18f-72e0-44cd-bd4f-1a82e6505205">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="write-xml"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="write-csv"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>
