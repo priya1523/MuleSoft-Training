@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="parellel-for_eachFlow" doc:id="45b50102-2247-4044-88f1-0e5619107d5b" >
+		<http:listener doc:name="Listener" doc:id="7b00ce6c-06e0-45d8-a9b8-a580f0bba00b" config-ref="HTTP_Listener_config" path="/parellel-for-each"/>
+		<logger level="INFO" doc:name="Start" doc:id="401aef57-1116-46ca-808a-20ddb831dae8" message="Application running....."/>
+		<parallel-foreach doc:name="Parallel For Each" doc:id="83d68a99-a4f1-41c7-bc1e-64fb1fddb9a2" >
+			<logger level="INFO" doc:name="In for each" doc:id="b486c63a-dbaf-4d43-ab40-e1e704375d14" message="#[payload.cust_id]"/>
+			<http:request method="GET" doc:name="Request" doc:id="4210a362-168b-4f8e-86de-457c4ecc3f24" config-ref="HTTP_Request_configuration" path="/users/{customerId}" target="customerResponse">
+				<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	customerId : payload.cust_id
+}]]]></http:uri-params>
+			</http:request>
+			<db:insert doc:name="Insert" doc:id="ee39f13f-78cb-44a0-aa35-1a934fb2b122" config-ref="Database_Config">
+				<db:sql ><![CDATA[insert into employee_db.customer_info values(:customerID,:customerName,:email:,:phone);]]></db:sql>
+				<db:input-parameters ><![CDATA[#[{
+	phone: payload.phone_no as String,
+	customerID: payload.cust_id as String,
+	customerName: vars.customerResponse.data.first_name ++ ' ' ++ vars.customerResponse.data.last_name,
+	email: vars.customerResponse.data.email
+}]]]></db:input-parameters>
+			</db:insert>
+		</parallel-foreach>
+		<logger level="INFO" doc:name="For each response" doc:id="a2118018-45fd-49b7-9e19-3e464f4560e4" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="8385abc1-2884-4fc3-8abb-0babc3b802db" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message":"Data inserted success !"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="356f18e2-fe5a-42fe-9e9c-137744292060" message="Application send response success !"/>
+	</flow>
+</mule>

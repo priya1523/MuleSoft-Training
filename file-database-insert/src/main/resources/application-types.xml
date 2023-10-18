@@ -39,6 +39,20 @@ type write_csv = Array<{|  first_name: String,   last_name: String,   email: Str
         <types:property name="isQuotedString" value="false"/>
       </types:properties>
     </types:type>
+    <types:type name="employee-csv" format="csv">
+      <types:shape format="weave"><![CDATA[%dw 2.0
+
+type employee_csv = Array<{|  empId: Number,   empName: String,   Designation: String,   salary: Number,   age: Number,   insert_date: Date|}> {"isQuotedString": "false",
+"header": "true",
+"headerLineNumber": "0"}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+      </types:properties>
+    </types:type>
   </types:catalog>
   <types:enrichment select="#99bfbab0-99f7-449f-83b2-804754cf63dc">
     <types:processor-declaration>
@@ -71,5 +85,12 @@ type write_csv = Array<{|  first_name: String,   last_name: String,   email: Str
         </types:message>
       </types:output-event>
     </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#3a8dc7b6-fcdd-4f24-9daa-035a8779cdbb">
+    <types:operation-declaration>
+      <types:inputs>
+        <types:parameter name="content" type="employee-csv"/>
+      </types:inputs>
+    </types:operation-declaration>
   </types:enrichment>
 </types:mule>

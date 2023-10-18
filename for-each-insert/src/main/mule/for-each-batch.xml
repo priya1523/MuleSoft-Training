@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="for-each-batchFlow"
+		doc:id="e7095c5e-2db1-4643-9879-523145875020">
+		<http:listener doc:name="Listener"
+			doc:id="95086b2d-8594-425c-a74e-7feb06bcf211"
+			config-ref="HTTP_Listener_config" path="/for-each-batch"
+			allowedMethods="POST" />
+		<logger level="INFO" doc:name="Start"
+			doc:id="db1aaa08-ceba-4910-9a9a-47ad90da19f5"
+			message="Application Running......" />
+		<foreach doc:name="For Each"
+			doc:id="1446efab-8184-4749-9c9c-128e0443ebcb" collection="#[payload]"
+			batchSize="3">
+			<set-variable value="#[[]]" doc:name="Set Variable"
+				doc:id="2323bcb5-a81e-4889-88f2-86aa19f036f9"
+				variableName="customer_list" />
+			<foreach doc:name="For Each"
+				doc:id="c8588769-f16b-4460-8ef9-04d59ebf3628"
+				collection="#[payload]">
+				<until-successful maxRetries="5"
+					doc:name="Until Successful"
+					doc:id="1c693fdb-caae-46bb-9dc1-9b9bc60cb0e8"
+					millisBetweenRetries="2000">
+					<http:request method="GET" doc:name="Request"
+						doc:id="3378534d-1d4f-4524-b960-3ed5469ddca2"
+						config-ref="HTTP_Request_configuration" path="/users/{customerId}"
+						target="customerResponse">
+						<http:uri-params><![CDATA[#[output application/java
+---
+{
+	customerId : payload.cust_id
+}]]]></http:uri-params>
+					</http:request>
+				</until-successful>
+				<ee:transform doc:name="Transform Message" doc:id="a591cca5-35ae-4744-aaed-cd72c79fd1b4" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="customer_list" ><![CDATA[%dw 2.0
+output application/java
+---
+flatten(vars.customer_list ++ [{
+	phone: payload.phone_no as String,
+	customerID: payload.cust_id as String,
+	customerName: vars.customerResponse.data.first_name ++ ' ' ++ vars.customerResponse.data.last_name,
+	email: vars.customerResponse.data.email
+}])]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</foreach>
+			<logger level="INFO" doc:name="Logger" doc:id="8250f792-0e20-4531-9a0b-117b08dc69c4" message="customer_list : #[vars.customer_list]"/>
+			<db:bulk-insert doc:name="Bulk insert" doc:id="4818c1e4-153c-4ab3-ba43-84df6385ab57" config-ref="Database_Config">
+				<db:bulk-input-parameters ><![CDATA[#[output application/java
+---
+vars.customer_list map ( customerlist , indexOfCustomerlist ) -> {
+	phone: customerlist.phone,
+	customerID: customerlist.customerID,
+	customerName: customerlist.customerName,
+	email: customerlist.email
+}]]]></db:bulk-input-parameters>
+				<db:sql ><![CDATA[insert into employee_db.customer_info values(:customerID,:customerName,:email:,:phone);]]></db:sql>
+			</db:bulk-insert>
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="2a312fb6-035e-4e8d-82c3-791931543e18" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message":"The data inserted success !"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="5f12992e-1543-4ba5-920f-ae077b5ba529" message="The application send response success !"/>
+	</flow>
+</mule>

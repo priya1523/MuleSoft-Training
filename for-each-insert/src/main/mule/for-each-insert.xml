@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="98b020e3-e13b-46ec-a0df-45b3ca4c7177" basePath="/foreach-api" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="c7c4ef03-e5aa-4bce-9bbb-0ead90cbc84e" basePath="/api">
+		<http:request-connection protocol="HTTPS" host="reqres.in"/>
+	</http:request-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="5fdb305b-0c7a-4e7c-b19d-ee1a72946ad0" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="root" database="employee_db" />
+	</db:config>
+	<flow name="for-each-insertFlow" doc:id="9605b248-b3eb-44a0-9241-c9525d14375a" >
+		<http:listener doc:name="Listener" doc:id="741d4eee-97da-4950-9e88-d4f3b0e6ff99" config-ref="HTTP_Listener_config" path="/insert-data" allowedMethods="POST"/>
+		<logger level="INFO" doc:name="Start" doc:id="d87cdd80-d7e0-4df7-911e-a02dc9b0636a" message="Application Running....."/>
+		<foreach doc:name="For Each" doc:id="52c996a4-41c2-43f3-85a9-09a7883978db" >
+			<logger level="INFO" doc:name="In for each" doc:id="d5fcccb3-c2dd-476a-961a-1e82dd34e0a2" message="Enteres in foe each...."/>
+			<http:request method="GET" doc:name="Request" doc:id="49929b9a-b6e9-405a-94c9-c8c89b994a6e" config-ref="HTTP_Request_configuration" path="/users/{customerId}" target="customerResponse">
+				<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	customerId : payload.cust_id
+}]]]></http:uri-params>
+			</http:request>
+			<db:insert doc:name="Insert" doc:id="b767c827-9855-42ae-ac8a-8618bb3b7c2d" config-ref="Database_Config">
+				<db:sql><![CDATA[insert into employee_db.customer_info values(:customerID,:customerName,:email:,:phone);]]></db:sql>
+				<db:input-parameters><![CDATA[#[output application/java
+---
+{
+	phone: payload.phone_no as String,
+	customerID: payload.cust_id as String,
+	customerName: vars.customerResponse.data.first_name ++ ' ' ++ vars.customerResponse.data.last_name,
+	email: vars.customerResponse.data.email
+}]]]></db:input-parameters>
+			</db:insert>
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="8a937d1e-bfb2-4314-be15-6c64a6957977" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message":"Data inserted successfully !"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="4c5fcd71-0828-404d-a402-538df11f82e8" message="Application inserted data successfully !!"/>
+	</flow>
+</mule>

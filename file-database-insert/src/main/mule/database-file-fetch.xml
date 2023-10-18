@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<os:object-store name="empId" doc:name="Object store" doc:id="7a02787e-f577-4595-9501-8a13a96ca914" maxEntries="10" entryTtl="8" entryTtlUnit="HOURS" />
+	<flow name="database-file-fetchFlow" doc:id="eee0151e-680a-43d5-b712-52b148aef964" >
+		<scheduler doc:name="Scheduler" doc:id="15c27e48-4d4f-4732-b1c1-f2d639e9aec3" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="2" timeUnit="MINUTES"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Start" doc:id="9c699b0e-2612-44f4-b373-e5924c515fb0" message="The poll send to database...."/>
+		<os:retrieve doc:name="Retrieve" doc:id="f36eccf5-1497-45f9-a08c-36926bfe92f2" key="empId" objectStore="empId">
+			<os:default-value ><![CDATA[0]]></os:default-value>
+		</os:retrieve>
+		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="f9afc0fd-07f5-46c2-836a-dd3db435c805" variableName="empId"/>
+		<db:select doc:name="Select" doc:id="88a35db7-86b9-467e-9563-12b69a01976b" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM employee_db.employee_details where empid>:id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	id:vars.empId
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="8dfb304c-dbab-4694-adf6-5e7cace28eee" >
+			<when expression="#[sizeOf(payload) == 0]">
+				<ee:transform doc:name="Transform Message" doc:id="4c690453-259e-4e84-a798-0dbad706a0f6" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message":"There no new records to update !"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<os:store doc:name="Store" doc:id="b56e6fb2-3030-4f16-8481-500c0ae74f82" key="empId" objectStore="empId">
+			<os:value><![CDATA[#[max(payload.empid)]]]></os:value>
+		</os:store>
+				<file:write doc:name="Write" doc:id="3a8dc7b6-fcdd-4f24-9daa-035a8779cdbb" config-ref="File_Config" path="C:\Users\priyakumari.a\Desktop\Files\Outbound\employee.csv" mode="APPEND">
+			<file:content><![CDATA[#[output application/csv
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	empId: payload01.empid,
+	empName: payload01.empname default "",
+	Designation: payload01.designation default "",
+	salary: payload01.salary default 0,
+	age: payload01.age default 0,
+	insert_date: payload01.insert_date default |1815-12-10|
+}]]]></file:content>
+		</file:write>
+				<ee:transform doc:name="Transform Message" doc:id="6c613e99-5ee4-471d-a60e-7ef91029c0ce" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message":"The new records are writtern in file !"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End" doc:id="9e0ce9ba-84ad-4d83-b39e-6813415ad06e" message="#[payload]"/>
+	</flow>
+</mule>

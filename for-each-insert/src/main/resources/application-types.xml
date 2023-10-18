@@ -1,0 +1,92 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="request-response" format="json">
+      <types:shape format="weave" example="response.json"><![CDATA[%dw 2.0
+
+type request_response = {|
+  data: {|
+    id: Number {"typeId": "int"}, 
+    email: String, 
+    first_name: String, 
+    last_name: String, 
+    avatar: String
+  |}, 
+  support: {|
+    url: String, 
+    text: String
+  |}
+|} {"example": "{\\\"data\\\":{\\\"id\\\":2,\\\"email\\\":\\\"janet.weaver@reqres.in\\\",\\\"first_name\\\":\\\"Janet\\\",\\\"last_name\\\":\\\"Weaver\\\",\\\"avatar\\\":\\\"https:\\/\\/reqres.in\\/img\\/faces\\/2-image.jpg\\\"},\\\"support\\\":{\\\"url\\\":\\\"https:\\/\\/reqres.in\\/#support-heading\\\",\\\"text\\\":\\\"To keep ReqRes free, contributions towards server costs are appreciated!\\\"}}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="payload" format="json">
+      <types:shape format="weave" example="examples/paload.json"><![CDATA[%dw 2.0
+
+type payload = {|
+  cust_id: Number {"typeId": "int"}, 
+  phone_no: Number {"typeId": "double"}
+|} {"example": "{\\\"cust_id\\\":2,\\\"phone_no\\\":9812645670}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="customer" format="json">
+      <types:shape format="weave" example="examples/customer.json"><![CDATA[%dw 2.0
+
+type customer = {|
+  customerID: Number {"typeId": "int"}, 
+  email: String, 
+  customerName: String, 
+  phone: Number {"typeId": "double"}
+|} {"example": "{\\\"customerID\\\":2,\\\"email\\\":\\\"janet.weaver@reqres.in\\\",\\\"customerName\\\":\\\"Janet Weaver\\\",\\\"phone\\\":4578963542}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="bulk-insert" format="json">
+      <types:shape format="weave" example="examples/bulk-insert.json"><![CDATA[%dw 2.0
+
+type bulk_insert = Array<{|  customerID: Number {"typeId": "int"},   email: String,   customerName: String,   phone: Number {"typeId": "double"}|}> {"example": "[{\\\"customerID\\\":2,\\\"email\\\":\\\"janet.weaver@reqres.in\\\",\\\"customerName\\\":\\\"Janet Weaver\\\",\\\"phone\\\":4578963542},{\\\"customerID\\\":2,\\\"email\\\":\\\"janet.weaver@reqres.in\\\",\\\"customerName\\\":\\\"Janet Weaver\\\",\\\"phone\\\":4578963542},{\\\"customerID\\\":2,\\\"email\\\":\\\"janet.weaver@reqres.in\\\",\\\"customerName\\\":\\\"Janet Weaver\\\",\\\"phone\\\":4578963542},{\\\"customerID\\\":2,\\\"email\\\":\\\"janet.weaver@reqres.in\\\",\\\"customerName\\\":\\\"Janet Weaver\\\",\\\"phone\\\":4578963542},{\\\"customerID\\\":2,\\\"email\\\":\\\"janet.weaver@reqres.in\\\",\\\"customerName\\\":\\\"Janet Weaver\\\",\\\"phone\\\":4578963542},{\\\"customerID\\\":2,\\\"email\\\":\\\"janet.weaver@reqres.in\\\",\\\"customerName\\\":\\\"Janet Weaver\\\",\\\"phone\\\":4578963542}]"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#c4fcf39a-5ecb-4aa8-9689-d96938f4acaf">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="payload"/>
+        </types:message>
+        <types:variables>
+          <types:variable name="customerResponse" type="request-response"/>
+        </types:variables>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="customer"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#bf77eb59-fdc7-4d95-b279-b66b78cc474e">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:variables>
+          <types:variable name="customer_info" type="bulk-insert"/>
+        </types:variables>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#2b6ac2ee-5192-499a-b3eb-b760504242bd"/>
+  <types:enrichment select="#b767c827-9855-42ae-ac8a-8618bb3b7c2d">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="payload"/>
+        </types:message>
+        <types:variables>
+          <types:variable name="customerResponse" type="request-response"/>
+        </types:variables>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>
