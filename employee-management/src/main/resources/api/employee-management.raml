@@ -1,0 +1,185 @@
+#%RAML 1.0
+title: employee-management
+description: This application is about the employee details mangement
+baseUri: base_url:http://localhost:8081/emp-api/v1
+
+/add-employee:
+    post:
+      description: This api for the add the employee details
+      body:
+        application/json:
+          example:
+            {
+              "empId":1,
+              "empName":"Priya",
+              "empStatus":"A"
+            }
+      responses:
+        200:
+          body: 
+            application/json:
+              example:
+                {
+                  "status":200,
+                  "message":"Employee details added successfully !"
+                }
+        500:
+          body:
+            application/json:
+              example:
+                {
+                  "status":500,
+                  "message":"Something went wrong !"
+                }
+/update-employee:
+  put:
+    description: This api is for update the employee details
+    body:
+      application/xml: 
+        example:
+          <?xml version="1.0" encoding="UTF-8"?>
+          <employee>
+            <empId>1</empId>
+            <empName>Priya</empName>
+            <empStatus>A</empStatus>
+          </employee>
+    responses:
+      200:
+        body:
+          application/xml:
+            example:
+              <?xml version="1.0" encoding="UTF-8"?>
+              <response>
+                <status>200</status>
+                <message>Employee details updated successfully !</message>
+              </response>
+      400:
+        body:
+          application/xml:
+            example:
+              <?xml version="1.0" encoding="UTF-8"?>
+              <response>
+                <status>404</status>
+                 <message>Employee details not found with empId=1</message>
+              </response>                                            
+      500:
+        body:
+          application/xml:
+            example:
+              <?xml version="1.0" encoding="UTF-8"?>
+              <response>
+                <status>200</status>
+                <message>Something went wrong !</message>
+              </response>
+/fetch-employee:
+    get:
+      description: This api is for fetch the employee details based on empId
+      queryParameters:
+        empId:
+          displayName: empId
+          required: true
+          type: integer
+          example:
+            value: 1
+        empStatus:
+          displayName: empStatus
+          required: false
+          type: string
+          example:
+            value: "A"
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                {
+                  "empId":1,
+                  "empName":"Priya",
+                  "empStatus":"A"
+                }
+        404:
+          body:
+            application/json:
+              example:
+                {
+                  "status":404,
+                  "message":"Employee details not found with empId : 1"
+                }
+        500:
+          body:
+            application/json:
+              example:
+                {
+                  "status":500,
+                  "message":"Something went wrong !"
+                }
+/fetch-employees:
+  get:
+    description: This api is for fetch the all employee details
+    responses:
+      200:
+        body:
+          application/json:
+            example:
+              [
+                {
+                  "empId":1,
+                  "empName":"Priya",
+                  "empStatus":"A"
+                },
+                {
+                  "empId":2,
+                  "empName":"Prince",
+                  "empStatus":"I"
+                }
+              ]
+      404:
+        body:
+          application/json:
+            example:
+              {
+                "status":404,
+                "message":"Employees details are not found !"
+              }
+      500:
+        body:
+          application/json:
+            example:
+              {
+                "status":500,
+                "message":"Something went wrong !"
+              }
+
+
+  /{empId}:
+    uriParameters:
+      empId: 
+        example:
+          value: '1'
+    delete:
+      description: This api is for delete the employee details based on empId
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                {
+                  "status":200,
+                  "message":"Employee details deleted successfully !"
+                }
+        404:
+          body:
+            application/json:
+              example:
+                {
+                  "status":404,
+                  "message":"Employee details not found with empId : 1"
+                }
+        500:
+          body:
+            application/json:
+              example:
+                {
+                  "status":500,
+                  "message":"Something went wrong !"
+                }

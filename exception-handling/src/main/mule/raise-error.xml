@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="raise-errorFlow" doc:id="b5c59b40-8b13-4e59-9a4d-9cf09091d9f2" >
+		<http:listener doc:name="Listener" doc:id="38c64dc2-cd3d-46ff-bba9-f371b929d1fb" config-ref="HTTP_Listener_config" path="/fetch-voterinfo" allowedMethods="GET">
+			<http:error-response statusCode="#[vars.statusCode]" reasonPhrase="#[vars.errorPhase]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<logger level="INFO" doc:name="Start" doc:id="0dc8c55e-6f9d-4c04-b14e-feaac3f8f62a" message="Application Running...."/>
+		<db:select doc:name="Select" doc:id="564fcbd6-750d-4b4e-8cf3-0375351f55e3" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from employee_db.voter_info where voter_id=:voter_id;]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	voter_id:attributes.queryParams.id
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="58deded5-4f93-4318-873c-4f5a7fec1d26" >
+			<when expression="#[payload  != []]">
+				<ee:transform doc:name="Transform Message" doc:id="7f45e379-0b98-432d-8b3f-8713955697dd">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload[0]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<otherwise >
+				<raise-error doc:name="Raise error" doc:id="6757db6e-908c-45c7-ab29-01b5533664e9" type="DATA:VOTER_NOT_EXISTS" description="Voter data is not available in database"/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End" doc:id="95975d3d-2908-4e87-b54c-85c2e7fe0ba8" message="Success response..."/>
+		<error-handler>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="917fb2f5-f93e-46f8-9c91-33ac60436e00" >
+				<ee:transform doc:name="Transform Message" doc:id="08bf9f82-ce62-4c9e-801c-74bef8d6bd83" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	status:470,
+	message:error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="470" doc:name="setStatusCode" doc:id="747ae171-71c4-479f-baf2-b6aeb6cfc922" variableName="statusCode" />
+				<set-variable value="VOTER NOT EXISTS" doc:name="setErrorPhase" doc:id="de120b28-c8b3-46c4-81d6-6f0c399d7dfa" variableName="errorPhase" />
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>

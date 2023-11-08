@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="put:\update-employee:application\xml:employee-management-config">
+        <logger level="INFO" doc:name="Start" doc:id="74aedcf2-a45e-41fb-bdf1-59cc2d6221f4" message="Enter in the update-employee flow"/>
+		<db:select doc:name="Select" doc:id="7e6c7338-c5fe-4388-8dbb-6a4c51b5ff74" config-ref="Database_Config" target="empData">
+			<db:sql ><![CDATA[select * from employee_details where empId=:empId;]]></db:sql>
+			<db:input-parameters ><![CDATA[#[output application/java
+---
+{
+	empId: payload.employee.empId
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="82d8955c-df42-4348-a621-aca291a7e833" >
+			<when expression="#[vars.empData != []]">
+				<logger level="INFO" doc:name="Logger" doc:id="364e6a08-3a7e-4adc-87ea-91642ac2392e" message="Employee found "/>
+				<db:update doc:name="Update" doc:id="9dee3195-6982-421b-8777-8a854dd68158" config-ref="Database_Config">
+			<db:sql><![CDATA[update employee_details set empName=:empName, empStatus=:empStatus where empId=:empId;]]></db:sql>
+			<db:input-parameters><![CDATA[#[output application/java
+---
+{
+	empId: payload.employee.empId,
+	empStatus: payload.employee.empStatus,
+	empName: payload.employee.empName
+}]]]></db:input-parameters>
+		</db:update>
+				<logger level="INFO" doc:name="Logger" doc:id="7bb905c6-13d9-4beb-bd2b-0d5983524229" message="Data updated !!" />
+				<ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    status: "200",
+    message: "Employee details updated successfully !"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="f4e7c63f-c654-44f8-96c9-796e80f3e501" message="employee not found"/>
+				<raise-error doc:name="Raise error" doc:id="b8417a75-10c6-416f-a1b7-466f6870c0ab" type="EMPLOYEEE:NOT_FOUND" description="Employee not present with given empId"/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End" doc:id="e83dfb0b-df5d-4ed8-b1fc-65f57745c0ef" message="End of update-employee flow"/>
+    
+</flow>
+</mule>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="c7a2fc91-75bc-4b92-8289-938006890011" basePath="/validate-card/v1" >
+		<http:request-connection host="validate-credit-card.us-e2.cloudhub.io" port="80">
+		</http:request-connection>
+	</http:request-config>
+	<flow name="post:\customer-info:application\json:genrate-bill-config" doc:id="404ae818-dd08-451e-9609-6762697ae0f8" >
+		<logger level="INFO" doc:name="Start" doc:id="9fb31b17-4b02-4252-8529-59b764fc26e4" message="Enter into the genrate-bill-implimentation"/>
+		<ee:transform doc:name="customer-crad-info" doc:id="9eaa7ed7-08ae-48b8-8231-632782864f45" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="validationRequestVar" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	creditCardNo: payload.ccNo default 0,
+	custName: payload.customerName default "",
+	cvv: payload.cvv default 0,
+	expiryDate: payload.expiryDate default ""
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="110afe01-c1ae-4f04-9aff-d6b179040a45" message="making request for card validate"/>
+		<http:request method="POST" doc:name="Valiadte Crad Request" doc:id="756fc8a4-d88d-4fae-9489-78db03b80b8c" config-ref="HTTP_Request_configuration" path="/creadit-card" target="validationResponseVar">
+			<http:body ><![CDATA[#[vars.validationRequestVar]]]></http:body>
+		</http:request>
+		<logger level="INFO" doc:name="Logger" doc:id="31fb35e1-5c7e-4aa9-a7de-307fba742abf" message="validation request is success.."/>
+		<logger level="INFO" doc:name="Logger" doc:id="ef2b6c01-fdb5-4e91-8d84-a87ec57d329a" message="#[vars.validationResponseVar]"/>
+		<choice doc:name="Choice" doc:id="65a44f3f-9b3b-4c7a-ac6c-ffc47dc26755" >
+			<when expression="#['Valid/Active' == vars.validationResponseVar.status]" doc:id="5597a985-b6ad-4ac0-99cd-e54c13596a33">
+				<logger level="INFO" doc:name="Logger" doc:id="4275f111-989b-4f86-b8f7-b75b46c96791" message="Card is valid"/>
+				<ee:transform doc:name="Transform Message" doc:id="9df513f0-0dfa-42c3-8a0b-60721e99a01c">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var bill = sum(payload.itemInfo.itemValue)
+---
+{
+	custId: payload.customerId,
+	custName: payload.customerName,
+	message: 'Transaction is success',
+	totalBill: bill
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="5944024a-ed0f-47ed-a128-af84cbe6d9f6" message="Card is invalid"/>
+				<raise-error doc:name="Raise error" doc:id="05ff3d8f-8583-4154-b50c-8a6204888dfb" type="CARD:INVALID" description="The card is Invalid/Inactive"/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End" doc:id="7a26963e-6ceb-4b7f-a32d-b09488177138" message="The genrate-bill-implimentation ends"/>
+		<error-handler >
+		</error-handler>
+	</flow>
+</mule>

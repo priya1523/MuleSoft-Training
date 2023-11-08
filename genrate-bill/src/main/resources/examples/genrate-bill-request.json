@@ -1,0 +1,21 @@
+{
+	"customerId":123,
+	"ccNo":12345,
+	"customerName":"sai",
+	"cvv":345,
+	"expiryDate":"03/25",
+	"itemInfo":[
+		{
+		"itemName":"Mobile",
+		"itemValue":34567
+		},
+		{
+		"itemName":"Mouse",
+		"itemValue":3456
+		},
+		{
+		"itemName":"Headset",
+		"itemValue":3456
+		}
+		]
+}

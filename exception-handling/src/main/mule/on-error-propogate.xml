@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="on-error-propogateFlow" doc:id="2a29e562-603c-4dab-9a32-153cb9d78ab7" >
+		<http:listener doc:name="Listener" doc:id="3c33a129-8b7d-46cc-ae88-b0163dec2e27" config-ref="HTTP_Listener_config" path="/on-error-propogate" allowedMethods="POST">
+			<http:error-response statusCode="#[vars.statusCode]" reasonPhrase="#[vars.errorPhase]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<logger level="INFO" doc:name="Start" doc:id="3602a402-33da-4a90-afb3-8cf9527b00e8" message="Application Running......"/>
+		<validation:is-true doc:name="Is true" doc:id="107402ff-36a6-4091-935c-bc28bb324d78" config-ref="Validation_Config" expression="#[payload.voterAge &gt;= 18]" message="Voter does not have sufficient age"/>
+		<db:insert doc:name="Insert" doc:id="ee3dea02-4c47-4e99-84f5-428a3fe5bfad" config-ref="Database_Config">
+			<db:sql ><![CDATA[insert into employee_db.voter_info values(:voter_id,:voter_name,:voter_age);]]></db:sql>
+			<db:input-parameters ><![CDATA[#[output application/java
+---
+{
+	voter_age: payload.voterAge,
+	voter_id: payload.voterId,
+	voter_name: payload.voterName
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="34e0dbd5-a5ab-42bc-95a2-6af325df285a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+"voter details are inserted into DB"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="05e5577c-e390-43b6-b691-3516e6a08510" message="Send response success !" />
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="109afd5a-7613-4207-9b6d-478e757b2f3f" type="VALIDATION:INVALID_BOOLEAN">
+				<ee:transform doc:name="Transform Message" doc:id="8526ee40-5c47-4707-81fd-10a46e9042e2" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status":450,
+	"message":error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="450" doc:name="setStatusCode" doc:id="01198c7b-634b-4f9f-b27a-967434dfd0c6" variableName="statusCode"/>
+				<set-variable value="INSUFFICIENT AGE" doc:name="setErrorPhase" doc:id="dc93c4e1-e60b-4132-9174-c83becc1890f" variableName="errorPhase"/>
+			</on-error-propagate>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="22fd76c3-353e-48f1-86e0-d84439f60592" type="DB:QUERY_EXECUTION">
+				<ee:transform doc:name="Transform Message" doc:id="dcb5a08f-0b29-4f9a-bb9f-afc2e8c7435d" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status":350,
+	"message":error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="350" doc:name="setStatusCode" doc:id="7df93aa3-842c-438d-90ec-5c24cebb0b06" variableName="statusCode"/>
+				<set-variable value="QUERY_EXECUTION" doc:name="setErrorPhase" doc:id="38d2fe73-dd6f-4520-b074-737ecdd80efb" variableName="errorPhase"/>
+			</on-error-propagate>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="a9768ccf-3135-412a-8f58-2697d28d85c1" type="DB:BAD_SQL_SYNTAX, DB:CONNECTIVITY, DB:RETRY_EXHAUSTED, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+				<ee:transform doc:name="Transform Message" doc:id="9377e4b9-bd1a-4bee-aedf-853fb25d9234" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status":470,
+	"message":error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="470" doc:name="setStatusCode" doc:id="f776bf8c-9411-4082-928e-7bb59c1d66a9" variableName="statusCode"/>
+				<set-variable value="OTHER" doc:name="setErrorPhase" doc:id="ac369583-8670-4f69-8bd9-9e58c5fe4e2f" variableName="errorPhase"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>

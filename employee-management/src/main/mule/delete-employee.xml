@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="delete:\fetch-employees\(empId):employee-management-config">
+        <logger level="INFO" doc:name="Start" doc:id="2eebefb9-94c3-4fb6-b597-3c55dff66e51" message="Enter into delete-employee flow"/>
+		<db:select doc:name="Select" doc:id="93a4528c-c26b-44d0-a960-3b42d68a6bda" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from employee_details where empId=:empId;]]></db:sql>
+			<db:input-parameters ><![CDATA[#[output application/java
+---
+{
+	empId: attributes.uriParams.empId
+}]]]></db:input-parameters>
+		</db:select>
+		<logger level="INFO" doc:name="Logger" doc:id="d31e4245-2fd8-4a7e-b1db-b759f60a41bf" message="Data Selected !"/>
+		<choice doc:name="Checking the employee is presnt with empId" doc:id="7d4649fb-6707-460f-a77e-69791c9311fc" >
+			<when expression="#[payload != []]">
+				<logger level="INFO" doc:name="Logger" doc:id="af275cb3-b093-4f3a-95a9-b02954ad2ccd" message="Data presnt with empId ! "/>
+				<db:delete doc:name="Delete" doc:id="9c5dd4c1-7025-48df-be24-947af81cf260" config-ref="Database_Config">
+					<db:sql ><![CDATA[DELETE FROM employee_details WHERE employee_details.empId = :empId;]]></db:sql>
+					<db:input-parameters ><![CDATA[#[output application/java
+---
+{
+	empId: payload[0].empId
+}]]]></db:input-parameters>
+				</db:delete>
+				<ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: 200,
+  message: "Employee details deleted successfully !"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="00fc7da7-a75d-4e5e-b6ec-329c68495c5c" message="Data not present with empId !"/>
+				<raise-error doc:name="Raise error" doc:id="f996bad9-e341-4cf5-94d3-9422d31ff5c2" type="EMPLOYEEE:NOT_FOUND" description="Employees details are not found with given empId !"/>
+			</otherwise>
+		</choice>
+    </flow>
+</mule>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	 <flow name="get:\fetch-employee:employee-management-config">
+        <logger level="INFO" doc:name="Start" doc:id="d94c564b-3d5e-4367-a9c0-3a74d233790e" message="enter into the fetch-employee flow"/>
+		<choice doc:name="Checking Status is send " doc:id="73e84214-dd30-4292-873c-071ec708a60c" >
+			<when expression="#[attributes.queryParams.empStatus != null]">
+				<logger level="INFO" doc:name="Logger" doc:id="fb018963-99a2-4baf-81cf-83be690c4276" message="Status is send : #[attributes.queryParams.empStatus]"/>
+				<db:select doc:name="Select" doc:id="91aab121-075d-4496-a67b-5aaf76b37528" config-ref="Database_Config">
+			<db:sql><![CDATA[select * from employee_details where empId=:empId and empStatus=:empStatus;]]></db:sql>
+			<db:input-parameters><![CDATA[#[output application/java
+---
+{
+	empId: attributes.queryParams.empId,
+	empStatus: attributes.queryParams.empStatus
+}]]]></db:input-parameters>
+		</db:select>
+				<logger level="INFO" doc:name="Logger" doc:id="ba6594e5-5baa-4015-8fe0-eb53a4f8fe3d" message="Data selected !" />
+				<choice doc:name="Checking data is present with empId and empStatus" doc:id="04d728be-1346-42e2-978f-9374c7539145">
+			<when expression="#[payload != []]">
+				<logger level="INFO" doc:name="Logger" doc:id="3626b12d-608e-4c97-8590-f29296071393" message="data found" />
+				<ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	empId: payload[0].empId,
+	empName: payload[0].empName,
+	empStatus: payload[0].empStatus
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="Logger" doc:id="aa488950-4a7e-4067-a9b9-d00785396dbf" message="Data not found" />
+				<raise-error doc:name="Raise error" doc:id="07541d6d-098c-4e46-8996-29e4fecc59bc" type="EMPLOYEEE:NOT_FOUND" description="Employees details are not found with given empId and empStatus!" />
+			</otherwise>
+		</choice>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="b5ba25e9-faf4-4135-b296-10058d66914b" message="status is not send"/>
+				<db:select doc:name="Select" doc:id="273096e6-f084-47f8-9eaf-e871d49f3b91" config-ref="Database_Config">
+					<db:sql ><![CDATA[select * from employee_details where empId=:empId]]></db:sql>
+					<db:input-parameters ><![CDATA[#[output application/java
+---
+{
+	empId: attributes.queryParams.empId
+}]]]></db:input-parameters>
+				</db:select>
+				<logger level="INFO" doc:name="Logger" doc:id="a5750005-b223-48fa-ad00-18ff8d807759" message="Data selected !"/>
+				<choice doc:name="Checking data is present with empId" doc:id="a8c3bcb7-91c7-448f-b5c5-22639b402597" >
+					<when expression="#[payload != []]">
+						<logger level="INFO" doc:name="Logger" doc:id="f78e80e7-5986-4c10-a90d-d53c94acf3ba" message="Data is present"/>
+						<ee:transform doc:name="Transform Message" doc:id="46c0cea6-b629-4c76-90a8-ea02880601ff" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	empId: payload[0].empId,
+	empName: payload[0].empName,
+	empStatus: payload[0].empStatus
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</when>
+					<otherwise >
+						<logger level="INFO" doc:name="Logger" doc:id="253324a7-05f3-44b8-b513-002e5bf0a99a" message="Data is not present !"/>
+						<raise-error doc:name="Raise error" doc:id="d7ac6f67-2ac3-4315-b289-d32118399a8a" type="EMPLOYEEE:NOT_FOUND" description="Employees details are not found with given empId !"/>
+					</otherwise>
+				</choice>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End" doc:id="8b2199f2-2083-470a-ae78-71968ab3d03b" message="End of fetch-employee flow"/>
+    
+</flow>
+</mule>

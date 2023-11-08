@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<error-handler name="global-errorError_Handler" doc:id="46e80d94-9365-4681-b1ba-5bd7d245d40a" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="3b0659eb-47ff-467b-8c16-b1013da359ef" type="VALIDATION:INVALID_BOOLEAN">
+			<ee:transform doc:name="Transform Message" doc:id="56ab4735-be49-45ab-8dff-b9cc5180608d" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status":450,
+	"message":error.description
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<set-variable value="450" doc:name="setStatusCode" doc:id="f99a82b7-f53b-40e9-bc61-eba4f5d50ee8" variableName="statusCode" />
+			<set-variable value="INSUFFICIENT AGE" doc:name="setErrorPhase" doc:id="18b4ce62-91f0-4546-accd-cc0eacb9acdd" variableName="errorPhase" />
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="1f00d825-ce08-436c-a787-bc40885bda47" type="DB:QUERY_EXECUTION">
+			<ee:transform doc:name="Transform Message" doc:id="f6a16849-3754-4c9a-aa28-0dbcb9fa2673" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status":350,
+	"message":error.description
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<set-variable value="350" doc:name="setStatusCode" doc:id="31732be5-310f-4ed3-84e0-5b9df31fac95" variableName="statusCode" />
+			<set-variable value="QUERY_EXECUTION" doc:name="setErrorPhase" doc:id="57210bd2-89a7-4e0b-a3ec-2f090199a10e" variableName="errorPhase" />
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="62308edd-7989-4ef3-8cc2-9b758c543e0a" type="ANY">
+			<ee:transform doc:name="Transform Message" doc:id="022a455d-3530-48fc-9ff6-f74768f926bb" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status":470,
+	"message":error.description
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<set-variable value="470" doc:name="setStatusCode" doc:id="5845597c-8b45-46b6-9b88-e9cb5050cd85" variableName="statusCode" />
+			<set-variable value="OTHER" doc:name="setErrorPhase" doc:id="d0a45712-d689-447c-aa28-d80104803ca8" variableName="errorPhase" />
+		</on-error-propagate>
+	</error-handler>
+</mule>

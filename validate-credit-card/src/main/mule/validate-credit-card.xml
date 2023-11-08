@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="a79c6a64-fa82-4f18-a1d4-85f651664041" basePath="/validate-card/v1" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="validate-credit-cardFlow" doc:id="56152d7d-d074-4dbb-bbb1-136c67527572" >
+		<http:listener doc:name="Listener" doc:id="fc0bf0a2-edb1-4759-8d61-c2afd0326b69" config-ref="HTTP_Listener_config" path="/creadit-card" allowedMethods="POST" />
+		<logger level="INFO" doc:name="Start" doc:id="40f9ee93-6846-44c1-a24a-82e371af0b77" message="The customer details: #[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="f68c1553-1806-47be-b49f-e9074ebbffdb" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var expiry =  payload.expiryDate[3 to 4] ++ payload.expiryDate[0 to 1]
+var current = now() as String {
+	format : 'YY'
+} ++ now().month
+---
+{
+	creditcardNo:  payload.creditCardNo,
+	custName:  payload.custName,
+	expiry: expiry,
+	current: current,
+	status: if ( expiry > current ) ('Valid/Active') else ('Invalid/Inactive')
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="60f66a08-8c9b-4ad6-b033-e40564147e92" message="The response : #[payload]" />
+	</flow>
+</mule>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	
+	 <db:config name="Database_Config" doc:name="Database Config" doc:id="db0595ff-f1b8-4142-86b1-307df8a433a6" >
+		<db:my-sql-connection host="sql12.freemysqlhosting.net" port="3306" user="sql12658995" password="dYLFjx1sTY" database="sql12658995" />
+	</db:config>
+	<flow name="post:\add-employee:application\json:employee-management-config">
+        <logger level="INFO" doc:name="Start" doc:id="976fefbe-1c51-447b-a429-2c09d424a271" message="enters in tyhe add-employee flow"/>
+		<db:insert doc:name="Insert" doc:id="885f5eb8-9565-46f6-ad30-6185ce707b74" config-ref="Database_Config">
+			<db:sql ><![CDATA[insert into employee_details values (:empId,:empName,:empStatus);]]></db:sql>
+			<db:input-parameters ><![CDATA[#[output application/java
+---
+{
+	empId: payload.empId,
+	empStatus: payload.empStatus,
+	empName: payload.empName
+}]]]></db:input-parameters>
+		</db:insert>
+		<logger level="INFO" doc:name="Logger" doc:id="cc00302d-54f2-45f7-b503-dc0033a35cfe" message="Data inserted !!"/>
+		<ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: 200,
+  message: "Employee details added successfully !"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="68ec7366-774b-4626-8d24-dae1c23b104f" message="end of add-employee flow"/>
+    
+</flow>
+</mule>

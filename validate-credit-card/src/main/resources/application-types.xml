@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="validate-card-request" format="json">
+      <types:shape format="weave" example="validate-card-request.json"><![CDATA[%dw 2.0
+
+type validate_card_request = {|
+  creditCardNo: Number {"typeId": "int"}, 
+  custName: String, 
+  cvv: Number {"typeId": "int"}, 
+  expiryDate: String
+|} {"example": "{\\\"creditCardNo\\\":1234,\\\"custName\\\":\\\"sai\\\",\\\"cvv\\\":678,\\\"expiryDate\\\":\\\"12\\/26\\\"}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="validate-card-response" format="json">
+      <types:shape format="weave" example="examples/validate-card-response.json"><![CDATA[%dw 2.0
+
+type validate_card_response = {|
+  creditcardNo: Number {"typeId": "int"}, 
+  custName: String, 
+  status: String
+|} {"example": "{\\\"creditcardNo\\\":1234,\\\"custName\\\":\\\"sai\\\",\\\"status\\\":\\\"Valid\\\"}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#f68c1553-1806-47be-b49f-e9074ebbffdb">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="validate-card-request"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="validate-card-response"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

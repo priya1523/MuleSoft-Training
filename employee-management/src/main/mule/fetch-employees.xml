@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="get:\fetch-employees:employee-management-config">
+        <logger level="INFO" doc:name="Start" doc:id="4008848a-4366-486c-bb84-20fbf7ce5073" message="Enter into fetch-employees flow"/>
+		<db:select doc:name="Select" doc:id="6fb3fa99-aa9e-43fe-93c3-e8f7d7c494fa" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from employee_details;]]></db:sql>
+		</db:select>
+		<logger level="INFO" doc:name="Logger" doc:id="27b6de9f-567c-4dc0-b53b-f4fc1e57d910" message="Data  is selected !"/>
+		<choice doc:name="Choice" doc:id="b3b0937e-1b79-4e74-ae75-f5d88d1aaa5b">
+			<when expression="#[payload != []]">
+				<logger level="INFO" doc:name="Logger" doc:id="db8e1ce2-cb5f-44ef-aabe-89a4b73eb1a1" message="There is data found"/>
+				<ee:transform doc:name="Transform Message" doc:id="5c881c65-5344-4e89-b613-1c9ba6b3f5d4" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	empId: payload01.empId,
+	empName: payload01.empName,
+	empStatus: payload01.empStatus
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="d3ca963b-4bd9-46a8-9d6b-a337a487433f" message="There is no data found"/>
+				<raise-error doc:name="Raise error" doc:id="7adef150-3900-4bf7-aacf-c0f50682b2e3" type="EMPLOYEEE:NOT_FOUND" description="Employees details are not found !"/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End" doc:id="8b449f13-ddb2-4ec9-afca-6fd22a617b50" message="End of fetch-employees flow"/>
+    
+</flow>	
+
+</mule>

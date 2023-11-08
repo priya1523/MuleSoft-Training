@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<configuration doc:name="Configuration" doc:id="57d48615-d420-4f46-9381-286bc69f26a2" defaultErrorHandler-ref="global-errorError_Handler" />
+	<flow name="global-error-handlingFlow" doc:id="e2190ad7-e8cb-4f4b-998b-d863f683bce3" >
+		<http:listener doc:name="Listener" doc:id="cd11cfd8-c342-4b87-9935-fe332fb6e6e2" config-ref="HTTP_Listener_config" path="/global-error-handling" allowedMethods="POST">
+			<http:error-response statusCode="#[vars.statusCode]" reasonPhrase="#[vars.errorPhase]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<logger level="INFO" doc:name="Start" doc:id="a435fc7d-59bb-40a9-ac0a-5f1652f486c4" message="Application Running...."/>
+		<validation:is-true doc:name="Is true" doc:id="1c2fb9d7-a62c-469c-bb35-96bd0736c453" config-ref="Validation_Config" expression="#[payload.voterAge &gt;= 18]" message="Voter does not have sufficient age"/>
+		<db:insert doc:name="Insert" doc:id="6bd9e9ce-3da2-44f2-ba70-eeed44b2e09f" config-ref="Database_Config">
+			<db:sql ><![CDATA[insert into employee_db.voter_info values(:voter_id,:voter_name,:voter_age);]]></db:sql>
+			<db:input-parameters ><![CDATA[#[output application/java
+---
+{
+	voter_age: payload.voterAge,
+	voter_id: payload.voterId,
+	voter_name: payload.voterName
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="2ca8625d-a4ac-4a5a-a815-9d396347cf3b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+"voter details are inserted into DB"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="032723ce-bbf6-4597-bdd5-3434bf2b20ed" message="Success Response.."/>
+	</flow>
+</mule>

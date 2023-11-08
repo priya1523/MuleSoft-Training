@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="on-error-continueFlow" doc:id="6ef199bd-fa89-4b44-887b-9bbee21ff903" >
+		<http:listener doc:name="Listener" doc:id="2d4eac39-b547-4ec9-b445-7f6f29dbe9a7" config-ref="HTTP_Listener_config" path="/on-error-continue" allowedMethods="POST"/>
+		<logger level="INFO" doc:name="Start" doc:id="ee7cbcc1-ee43-407c-9f53-b24fcce666e3" message="Apllication Running..."/>
+		<flow-ref doc:name="Flow Reference" doc:id="5fbfbd86-6ddb-44e7-bb04-9bda8576f56a" name="is-true"/>
+		<flow-ref doc:name="Flow Reference" doc:id="0934132b-9be4-4780-a4c1-48cf2af45e32" name="insert" />
+		<ee:transform doc:name="Transform Message" doc:id="41ebe286-b76a-407f-9cf1-6538c144fc32" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="e5d2146e-536c-4f40-ac1a-f10c98ab4899" message="Success Response"/>
+	</flow>
+	<sub-flow name="is-true" doc:id="d0af9d40-65bf-4a74-a320-b1fc0c2faac9" >
+		<try doc:name="Try" doc:id="9e89d238-75e1-404e-90ab-370cdb574f87" >
+			<validation:is-true doc:name="Is true" doc:id="30ec739d-a3b9-4f76-bd10-ffeebdecadae" config-ref="Validation_Config" expression="#[payload.voterAge &gt;= 18]" message="Voter does not have sufficient age"/>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="36a23cbf-1e87-422b-b937-6edeee2ab2c3" type="VALIDATION:INVALID_BOOLEAN">
+					<ee:transform doc:name="Transform Message" doc:id="2b1e8a82-2f9a-4c57-a66f-dd8fbab733f3" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status":450,
+	"message":error.description
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<set-variable value="450" doc:name="setStatusCode" doc:id="c4df5a13-155a-4968-8d6d-30a3d74ba9fc" variableName="statusCode" />
+					<set-variable value="INSUFFICIENT AGE" doc:name="setErrorPhase" doc:id="5e91df73-0513-464c-9f3c-29601e68ecfb" variableName="errorPhase" />
+				</on-error-continue>
+			</error-handler>
+		</try>
+	</sub-flow>
+	<sub-flow name="insert" doc:id="2b95b415-64f6-4b6a-997d-bfcb68f4d58a" >
+		<try doc:name="Try" doc:id="6126c98e-047d-4bba-ab5d-3c715372c453" >
+			<db:insert doc:name="Insert" doc:id="8a4d6e8e-34b1-4966-976c-e159c5aad9be" config-ref="Database_Config">
+			<db:sql><![CDATA[insert into employee_db.voter_info values(:voter_id,:voter_name,:voter_age);]]></db:sql>
+			<db:input-parameters><![CDATA[#[output application/java
+---
+{
+	voter_age: payload.voterAge,
+	voter_id: payload.voterId,
+	voter_name: payload.voterName
+}]]]></db:input-parameters>
+		</db:insert>
+			<ee:transform doc:name="Transform Message" doc:id="99cc84de-5881-4248-8a9a-a2f722b68c80" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"status":200,
+	"message":"Data inserted success"
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="cc2df00d-4cce-4112-8633-1b18a8d10ba8" type="DB:QUERY_EXECUTION">
+					<ee:transform doc:name="Transform Message" doc:id="1e6206c4-af8c-430e-a19a-d6c4712e9e3b" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status":350,
+	"message":error.description
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<set-variable value="350" doc:name="setStatusCode" doc:id="2e62dc2e-617c-45b8-8fe3-26150c88f07d" variableName="statusCode" />
+					<set-variable value="QUERY_EXECUTION" doc:name="setErrorPhase" doc:id="b2db9982-d3b6-4d8f-a894-abeaa7826acc" variableName="errorPhase" />
+				</on-error-continue>
+			</error-handler>
+		</try>
+	</sub-flow>
+</mule>

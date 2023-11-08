@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="b97334eb-c9f1-4910-a8a7-0b894663bdd8" basePath="/exception-handling" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<validation:config name="Validation_Config" doc:name="Validation Config" doc:id="f5f17969-74d0-4539-bafc-4539484eeed4"/>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="aed16d99-f3b6-4b72-a5bf-967fd5e6c283" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="root" database="employee_db" />
+	</db:config>
+	<flow name="validationFlow" doc:id="c4617424-f2e5-4f75-9a2f-baf4963d9443" >
+		<http:listener doc:name="Listener" doc:id="61573fab-0826-4d68-b894-34f913e8b65b" config-ref="HTTP_Listener_config" path="/insert-voterinfo" allowedMethods="POST"/>
+		<logger level="INFO" doc:name="Start" doc:id="9e9d03e4-e03b-437f-85f9-576b2b2fc08c" message="Application Running......"/>
+		<validation:is-true doc:name="Is true" doc:id="8927b934-4697-40e5-b3f1-a64965614691" config-ref="Validation_Config" expression="#[payload.voterAge &gt;= 18]" message="Voter does not have sufficient age"/>
+		<logger level="INFO" doc:name="True" doc:id="3be70685-b072-4003-acca-d3ffd30fbf0f" message="Voter has sufficiant age "/>
+		<db:insert doc:name="Insert" doc:id="91e269be-e90d-43b2-b5ab-cf2f1cf67c0a" config-ref="Database_Config">
+			<db:sql ><![CDATA[insert into employee_db.voter_info values(:voter_id,:voter_name,:voter_age);]]></db:sql>
+			<db:input-parameters ><![CDATA[#[output application/java
+---
+{
+	voter_age: payload.voterAge,
+	voter_id: payload.voterId,
+	voter_name: payload.voterName
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="b34d6f77-d8a2-4be5-8e14-c1ef7424f00f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+"voter details are inserted into DB"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="3819b11e-8b9c-4fe1-88ea-59bdb070e3ae" message="Send response success !"/>
+	</flow>
+</mule>

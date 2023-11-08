@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="a8b2beb9-440e-4458-aeb9-a8a466de3e7b" basePath="/property-file" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="01da20d3-0885-4185-b519-9a6af6c84748" basePath="${dummy.base_path}" >
+		<http:request-connection protocol="HTTPS" host="${secure::dummy.host}" port="${dummy.port}" />
+	</http:request-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="841f861e-85fe-4952-8119-9c1bb172fea0" file="${env}" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="6539d577-4a4d-49ce-a52c-dac4be08348d" file="${env}" key="aimtechnologies " >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<flow name="property-fileFlow" doc:id="9df3787a-99dd-487d-86e8-5802e3f40e9b" >
+		<http:listener doc:name="Listener" doc:id="08cdb869-cedc-45ac-80f3-9642af48d8ec" config-ref="HTTP_Listener_config" path="/dev-test" allowedMethods="GET"/>
+		<logger level="INFO" doc:name="Start" doc:id="e242b03e-8628-4098-a3ff-257df18d553c" message="Application Running..."/>
+		<logger level="INFO" doc:name="Logger" doc:id="65a273a0-d925-4601-9c12-201c9479f2b3" message="${dummy.path}  "/>
+		<http:request method="GET" doc:name="Request" doc:id="3403b2b7-f50f-4187-95af-3aa957784b26" config-ref="HTTP_Request_configuration" path="${dummy.path}"/>
+		<ee:transform doc:name="Transform Message" doc:id="e488983b-d4f4-4bbc-a0d9-a5ba62f63c28" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="d28d8034-bf52-42ee-bd81-db07d57ef9d0" message="Success response.."/>
+	</flow>
+</mule>

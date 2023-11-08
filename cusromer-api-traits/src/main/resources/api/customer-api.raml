@@ -1,0 +1,24 @@
+#%RAML 1.0
+title: customer-api
+description: To Add customer info to DB
+baseUri: https://localhost:8081/customer-api
+traits:
+  client_id : !include /exchange_modules/06e1b1d4-560d-407a-af57-df08f62fe355/clinet-id/1.0.0/clinet-id.raml
+  transcation_id : !include /exchange_modules/06e1b1d4-560d-407a-af57-df08f62fe355/transcation-id/1.0.1/transcation-id.raml
+
+/add-customer:
+  post:
+    description: Add Customer Info to DB
+    is: [client_id, transcation_id]
+    body:
+      application/json:
+        example: !include /examples/customer-request.json
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include /examples/customer-response.json
+      400:
+        body:
+          application/json:
+            example: !include /examples/bad-request.json

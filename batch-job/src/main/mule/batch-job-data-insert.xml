@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="c8c88e16-cd9f-474d-adc9-e0ed3bd45e3c" basePath="/batch-job" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="a45cf5e7-3603-41eb-9ac9-0ba7e1766948" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="root" database="employee_db" />
+	</db:config>
+	<flow name="batch-job-data-insertFlow" doc:id="711fb2dd-270e-4605-8889-8a86b406edf2" >
+		<http:listener doc:name="Listener" doc:id="2f6b452b-0bb9-42cd-b7e2-bb1c2a0733b0" config-ref="HTTP_Listener_config" path="/data-insert" allowedMethods="POST"/>
+		<logger level="INFO" doc:name="Start" doc:id="b7319ea5-0e34-4e83-aa30-c18a814c1448" message="Application Running......"/>
+		<ee:transform doc:name="Transform Message" doc:id="abde3680-c070-45ef-9dab-9cde1d1e6017" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="batch-job-data-insertBatch_Job" doc:id="a8a4697a-3dca-4f62-9d6e-f2990e39334a" maxFailedRecords="-1">
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="c0d0c4dd-072a-4abb-9afe-07279008ceee" >
+					<logger level="INFO" doc:name="Batch-step-Start" doc:id="78a047f3-2994-4b41-8cc9-db31fcbab903" message="Insert into batch step"/>
+					<ee:transform doc:name="Transform Message" doc:id="5f43ba65-75bf-43b6-8111-4c00ace16d2e" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"emp_id":payload.emp_id,
+	"emp_name":payload.emp_name,
+	"emp_salary":payload.empsalary.basic + payload.empsalary.hra +payload.empsalary.da + payload.empsalary.allowances
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="8527e5fa-1553-4f92-9479-ec6b447658c6" size="3">
+						<logger level="INFO" doc:name="batch-aggegator-start" doc:id="86c0874f-1e15-48fa-99c3-00151ef68d19" message="Enter into batch-aggregator"/>
+						<db:bulk-insert doc:name="Bulk insert" doc:id="69b99731-4022-48d4-ae9a-9a1e39cb95cc" config-ref="Database_Config">
+							<db:bulk-input-parameters ><![CDATA[#[output application/java
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	emp_salary: payload01.emp_salary,
+	emp_name: payload01.emp_name as String,
+	emp_id: payload01.emp_id
+}]]]></db:bulk-input-parameters>
+							<db:sql ><![CDATA[insert into employee_db.emp_batch_job values (:emp_id,:emp_name,:emp_salary);]]></db:sql>
+						</db:bulk-insert>
+						<logger level="INFO" doc:name="batch=aggregator-end" doc:id="62599a39-30fe-4874-bc50-cfa771a91ac5" message="batch aggregator is end"/>
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="On complete start" doc:id="e04b5030-6d3a-4f41-9d4d-6d400557b189" message="Enter in on complete..."/>
+				<logger level="WARN" doc:name="on complete payload" doc:id="3ad1d3c6-9750-4367-ad4c-ef40237ff3fa" message="#[payload.successfulRecords]"/>
+			</batch:on-complete>
+		</batch:job>
+		<ee:transform doc:name="Transform Message" doc:id="7f06330e-9f6e-48cc-a98b-d316929a4770" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+"Batch job insert the data successfully !"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End" doc:id="171b9360-6941-4716-888c-b6d09c83dc74" message="Application send the response success !"/>
+	</flow>
+</mule>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="367099ce-857d-4144-ac16-7c58e8f3f127" >
+		<file:connection workingDir="C:\Users\priyakumari.a\Desktop\Files" />
+	</file:config>
+	<flow name="batch-job-file-insertFlow" doc:id="dcb6c888-f343-45f9-b6b2-030fe98edd3c" >
+		<file:listener doc:name="On New or Updated File" doc:id="09f99a06-3bbc-4fa2-8450-370fbac4e563" config-ref="File_Config" directory="C:\Users\priyakumari.a\Desktop\Files\Inbound">
+			<scheduling-strategy >
+				<fixed-frequency frequency="2" timeUnit="MINUTES"/>
+			</scheduling-strategy>
+		</file:listener>
+		<ee:transform doc:name="Transform Message" doc:id="a0aa62ce-c929-488d-9320-10046941e263" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="batch-job-file-insertBatch_Job" doc:id="32a7f7b1-631b-4414-a6b0-f0a05597875b" maxFailedRecords="-1">
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="c2c69c69-5dac-4943-8854-35825777c51c" >
+					<logger level="ERROR" doc:name="Logger" doc:id="cceb1171-4bf3-4fe1-95c1-a80ab7c5a70e" message="#[payload.first_name]"/>
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="7152bbd4-4be6-49dc-b3fb-aed23e1d2a13" size="10">
+						<db:bulk-insert doc:name="Bulk insert" doc:id="65bb7e60-d722-487e-b545-bde91e488f0e" config-ref="Database_Config">
+							<db:bulk-input-parameters ><![CDATA[#[output application/java
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	phone_no: payload01.phone_no,
+	gender: payload01.gender,
+	last_name: payload01.last_name,
+	years_of_experience: payload01.years_of_experience,
+	salary: payload01.salary,
+	department: payload01.department,
+	first_name: payload01.first_name,
+	job_title: payload01.job_title,
+	email: payload01.email,
+	age: payload01.age
+}]]]></db:bulk-input-parameters>
+							<db:sql ><![CDATA[insert into employee_db.employee_info values(:first_name,:last_name,:email,:phone_no,:gender,:age,:job_title,:years_of_experience,:salary,:department);]]></db:sql>
+						</db:bulk-insert>
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="b39a0bd2-6a29-45f1-9ff9-f8fabe6d619f" message="#[payload.successfulRecords]"/>
+			</batch:on-complete>
+		</batch:job>
+		<ee:transform doc:name="Transform Message" doc:id="04b7510e-e138-4427-8798-14731593aa8e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+"Data inserted successful !"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
